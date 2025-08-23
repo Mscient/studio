@@ -36,7 +36,6 @@ export default function Home() {
     const formData = new FormData(event.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    const selectedRole = formData.get('role') as string || role;
     
     try {
       if (isRegister) {
@@ -46,6 +45,7 @@ export default function Home() {
         const gender = formData.get('gender') as string;
         const contact = formData.get('contact') as string;
         const govtId = formData.get('govtId') as string;
+        const selectedRole = formData.get('role') as string;
         
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
@@ -59,7 +59,7 @@ export default function Home() {
             name: name,
             email: user.email,
             role: selectedRole,
-            age: parseInt(age, 10) || null,
+            age: age ? parseInt(age, 10) : null,
             gender: gender,
             phone: contact,
             govtId: govtId,
