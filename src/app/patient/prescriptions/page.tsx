@@ -6,26 +6,22 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Stethoscope, User, Calendar, Pill, Clock, ShieldCheck, Info, Bell } from "lucide-react";
+import { FileText, Stethoscope, User, Calendar, Pill, Clock, ShieldCheck, Info, Bell, Download, Printer } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const prescriptions = [
   {
     id: 1,
     doctor: "Dr. Ananya Mehta",
     doctorSpecialty: "MBBS, MD – General Physician",
+    clinic: "Apollo Clinic",
     patient: "Rahul Sharma",
     patientAge: 28,
     diagnosis: "Viral Upper Respiratory Infection (Common Cold + Mild Fever)",
@@ -37,7 +33,7 @@ const prescriptions = [
         name: "Paracetamol 500 mg",
         brand: "Crocin Advance",
         dosage: "1 tablet",
-        frequency: "Every 6 hours (Max 4 doses/day)",
+        frequency: "Every 6 hours",
         duration: "3 days",
         purpose: "Reduces fever, relieves headache and body ache",
       },
@@ -45,15 +41,15 @@ const prescriptions = [
         name: "Cetirizine 10 mg",
         brand: "Cetzine",
         dosage: "1 tablet",
-        frequency: "Once at night (after dinner)",
+        frequency: "Once at night",
         duration: "5 days",
-        purpose: "Relieves sneezing, runny nose, watery eyes (anti-allergic)",
+        purpose: "Relieves sneezing, runny nose",
       },
       {
         name: "Vitamin C 500 mg",
         brand: "Limcee Chewable Tablet",
         dosage: "1 tablet",
-        frequency: "Once daily (morning after breakfast)",
+        frequency: "Once daily",
         duration: "7 days",
         purpose: "Boosts immunity",
       },
@@ -63,6 +59,7 @@ const prescriptions = [
     id: 2,
     doctor: "Dr. Rakesh Iyer",
     doctorSpecialty: "MD – Internal Medicine, Endocrinology",
+    clinic: "Fortis Hospital",
     patient: "Smt. Kavita Joshi",
     patientAge: 52,
     diagnosis: "Type 2 Diabetes Mellitus + Hypertension",
@@ -74,33 +71,25 @@ const prescriptions = [
         name: "Metformin 500 mg",
         brand: "Glycomet SR 500",
         dosage: "1 tablet",
-        frequency: "Twice daily (morning & evening, after meals)",
-        duration: "Continuous (long-term)",
-        purpose: "Controls blood sugar levels",
-      },
-      {
-        name: "Glimepiride 2 mg",
-        brand: "Amaryl",
-        dosage: "1 tablet",
-        frequency: "Once daily (before breakfast)",
+        frequency: "Twice daily",
         duration: "Continuous",
-        purpose: "Stimulates insulin release to lower blood glucose",
+        purpose: "Controls blood sugar",
       },
       {
         name: "Telmisartan 40 mg",
         brand: "Telma-40",
         dosage: "1 tablet",
-        frequency: "Once daily (morning)",
-        duration: "Continuous (long-term)",
-        purpose: "Controls high blood pressure, protects kidneys",
+        frequency: "Once daily",
+        duration: "Continuous",
+        purpose: "Controls blood pressure",
       },
       {
         name: "Atorvastatin 10 mg",
         brand: "Atorva-10",
         dosage: "1 tablet",
-        frequency: "Once at night (after dinner)",
-        duration: "Continuous (long-term)",
-        purpose: "Lowers cholesterol, prevents heart complications",
+        frequency: "Once at night",
+        duration: "Continuous",
+        purpose: "Lowers cholesterol",
       },
     ],
   },
@@ -121,8 +110,6 @@ export default function PrescriptionsPage() {
 
     Notification.requestPermission().then(permission => {
       if (permission === "granted") {
-        // In a real app, you would use a service worker to schedule the notification.
-        // For this demo, we'll just show a confirmation toast.
         toast({
           title: "Reminder Set",
           description: `You will be reminded to take ${medicineName}.`,
@@ -136,6 +123,13 @@ export default function PrescriptionsPage() {
       }
     });
   };
+
+  const handleAction = (action: "Download" | "Print") => {
+    toast({
+      title: `${action} Initiated`,
+      description: `Your prescription is being prepared for ${action.toLowerCase()}.`,
+    })
+  }
 
   return (
     <AppLayout userType="patient">
@@ -155,84 +149,79 @@ export default function PrescriptionsPage() {
         <div className="space-y-8">
           {prescriptions.map((prescription) => (
             <Card key={prescription.id} className="shadow-lg">
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                     <Avatar className="w-12 h-12">
+              <CardHeader className="bg-muted/30">
+                 <div className="flex flex-col sm:flex-row justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                     <Avatar className="w-16 h-16 border-2 border-primary">
                         <AvatarImage src={prescription.avatarUrl} data-ai-hint={prescription.avatarHint}/>
                         <AvatarFallback>{prescription.doctor.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-semibold text-foreground">{prescription.doctor}</p>
-                      <p className="text-sm text-muted-foreground">({prescription.doctorSpecialty})</p>
+                      <p className="text-xl font-bold text-primary">{prescription.doctor}</p>
+                      <p className="text-sm text-muted-foreground">{prescription.doctorSpecialty}</p>
+                       <p className="text-sm font-semibold text-foreground">{prescription.clinic}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm self-start sm:self-center">
-                    <Calendar className="w-4 h-4" />
-                    <span>{new Date(prescription.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  <div className="text-sm text-muted-foreground text-left sm:text-right">
+                    <p><strong>Date:</strong> {new Date(prescription.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
+                    <p><strong>Prescription ID:</strong> #{prescription.id.toString().padStart(5, '0')}</p>
                   </div>
                 </div>
-                 <div className="flex items-center gap-2 pt-4 text-muted-foreground text-sm">
-                    <User className="w-4 h-4" />
-                    <p>
-                      Patient: <span className="font-semibold text-foreground">{prescription.patient}</span> (Age: {prescription.patientAge})
-                    </p>
-                  </div>
-                 <CardTitle className="pt-4 !text-xl">Diagnosis: {prescription.diagnosis}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value={`item-${prescription.id}`}>
-                    <AccordionTrigger className="font-semibold text-base">
-                      View Prescribed Medicines ({prescription.medicines.length})
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-4 pt-2">
-                        {prescription.medicines.map((med) => (
-                          <div key={med.name} className="p-4 rounded-lg border bg-background/50 space-y-3">
-                             <div className="flex justify-between items-start">
-                                <p className="font-bold text-lg text-primary">{med.name} <span className="text-sm font-normal text-muted-foreground">({med.brand})</span></p>
-                                <Button variant="outline" size="sm" onClick={() => handleSetReminder(med.name)}>
-                                    <Bell className="mr-2 h-4 w-4"/> Set Reminder
-                                </Button>
-                             </div>
-                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                <div className="flex items-center gap-2">
-                                  <Pill className="w-4 h-4 text-primary" />
-                                  <div>
-                                    <p className="text-muted-foreground">Dosage</p>
-                                    <p className="font-semibold">{med.dosage}</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Clock className="w-4 h-4 text-primary" />
-                                  <div>
-                                    <p className="text-muted-foreground">Frequency</p>
-                                    <p className="font-semibold">{med.frequency}</p>
-                                  </div>
-                                </div>
-                                 <div className="flex items-center gap-2">
-                                  <Calendar className="w-4 h-4 text-primary" />
-                                  <div>
-                                    <p className="text-muted-foreground">Duration</p>
-                                    <p className="font-semibold">{med.duration}</p>
-                                  </div>
-                                </div>
-                                 <div className="flex items-center gap-2">
-                                  <ShieldCheck className="w-4 h-4 text-primary" />
-                                  <div>
-                                    <p className="text-muted-foreground">Purpose</p>
-                                    <p className="font-semibold">{med.purpose}</p>
-                                  </div>
-                                </div>
-                             </div>
+              <CardContent className="p-6">
+                <div className="grid md:grid-cols-2 gap-4 border-b pb-4">
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Patient</p>
+                        <p className="font-semibold">{prescription.patient} (Age: {prescription.patientAge})</p>
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Diagnosis</p>
+                        <p className="font-semibold">{prescription.diagnosis}</p>
+                    </div>
+                </div>
+
+                <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Pill className="text-primary"/> Medications (Rx)</h3>
+                    <div className="space-y-4">
+                      {prescription.medicines.map((med) => (
+                        <div key={med.name} className="p-4 rounded-lg border bg-background/50 space-y-3 relative group">
+                          <div className="flex justify-between items-start">
+                              <p className="font-bold text-md text-foreground pr-16">{med.name} <span className="text-sm font-normal text-muted-foreground">({med.brand})</span></p>
+                              <Button variant="ghost" size="sm" className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleSetReminder(med.name)}>
+                                  <Bell className="h-4 w-4"/> <span>Set Reminder</span>
+                              </Button>
                           </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                  <p className="text-muted-foreground text-xs">Dosage</p>
+                                  <p className="font-semibold">{med.dosage}</p>
+                              </div>
+                              <div>
+                                  <p className="text-muted-foreground text-xs">Frequency</p>
+                                  <p className="font-semibold">{med.frequency}</p>
+                              </div>
+                              <div>
+                                  <p className="text-muted-foreground text-xs">Duration</p>
+                                  <p className="font-semibold">{med.duration}</p>
+                              </div>
+                          </div>
+                           <div>
+                                <p className="text-muted-foreground text-xs">Purpose</p>
+                                <p className="font-semibold text-sm">{med.purpose}</p>
+                            </div>
+                        </div>
+                      ))}
+                    </div>
+                </div>
               </CardContent>
+              <CardFooter className="bg-muted/30 p-4 flex justify-end gap-2">
+                 <Button variant="outline" onClick={() => handleAction('Download')}>
+                    <Download className="mr-2"/> Download
+                 </Button>
+                 <Button onClick={() => handleAction('Print')}>
+                    <Printer className="mr-2"/> Print
+                 </Button>
+              </CardFooter>
             </Card>
           ))}
         </div>
