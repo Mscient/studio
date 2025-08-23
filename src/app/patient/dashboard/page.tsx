@@ -12,19 +12,25 @@ import { useEffect, useState } from "react";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import QRCode from "qrcode.react";
 
 
 export default function PatientDashboard() {
   const [user] = useAuthState(auth);
-  const [userName, setUserName] = useState('Welcome back!');
+  const [userName, setUserName] = useState('');
+  const [greeting, setGreeting] = useState('Welcome back!');
+  const [profileUrl, setProfileUrl] = useState('');
 
   useEffect(() => {
     if (user) {
+      setProfileUrl(`${window.location.origin}/patient/profile/${user.uid}`);
       const fetchUserData = async () => {
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            setUserName(`Welcome back, ${docSnap.data().name.split(' ')[0]}!`);
+            const userData = docSnap.data();
+            setUserName(userData.name);
+            setGreeting(`Welcome back, ${userData.name.split(' ')[0]}!`);
         }
       };
       fetchUserData();
@@ -38,7 +44,7 @@ export default function PatientDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center border-b">
               <div className="grid gap-2">
-                <CardTitle>{userName}</CardTitle>
+                <CardTitle>{greeting}</CardTitle>
                 <CardDescription>
                   Here's your health summary. Ready to take control of your well-being?
                 </CardDescription>
@@ -50,7 +56,7 @@ export default function PatientDashboard() {
             <CardHeader className="border-b">
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-2 p-4">
+            <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-2 p-4">
               <Link href="/patient/book-appointment" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <HeartPulse className="w-7 h-7 text-primary" />
                 <span className="text-center text-xs font-medium">Book Doctor</span>
@@ -62,10 +68,6 @@ export default function PatientDashboard() {
               <Link href="/patient/consult-online" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <Video className="w-7 h-7 text-primary" />
                 <span className="text-center text-xs font-medium">Consult Online</span>
-              </Link>
-              <Link href="/patient/detailed-analysis" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
-                <BrainCircuit className="w-7 h-7 text-primary" />
-                <span className="text-center text-xs font-medium">AI Analysis</span>
               </Link>
             </CardContent>
           </Card>
@@ -125,6 +127,26 @@ export default function PatientDashboard() {
         </div>
 
         <div className="space-y-4">
+          <Card className="text-center">
+            <CardHeader>
+                <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit">
+                    <QrCode className="w-8 h-8 text-primary" />
+                </div>
+                <CardTitle className="mt-2">My QR Code</CardTitle>
+                <CardDescription>Show this to your doctor to share your profile.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center gap-4">
+                {profileUrl ? (
+                    <div className="p-4 bg-white rounded-lg border shadow-sm">
+                        <QRCode value={profileUrl} size={192} />
+                    </div>
+                ) : (
+                    <div className="w-48 h-48 bg-muted rounded-lg animate-pulse" />
+                )}
+                {userName && <p className="font-semibold text-lg">{userName}</p>}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between border-b">
               <CardTitle>Upcoming Appointments</CardTitle>
@@ -152,46 +174,6 @@ export default function PatientDashboard() {
                   <p className="text-sm text-muted-foreground">July 25, at 2:30 PM</p>
                 </div>
                 <Badge variant="default" className="ml-auto">Confirmed</Badge>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle>Recent Doctors</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 p-4">
-              <div className="flex items-center gap-4">
-                <Image src="https://i.ibb.co/6yD3g0F/caucasian-female-doctor.png" alt="Dr. Carter" width={40} height={40} className="rounded-full" data-ai-hint="caucasian female doctor"/>
-                <div className="grid gap-1">
-                  <p className="text-sm font-medium leading-none">
-                    Dr. Emily Carter
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Cardiologist
-                  </p>
-                </div>
-                <div className="ml-auto font-medium">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href="/patient/book-appointment">Book</Link>
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <Image src="https://i.ibb.co/hM6g3P5/black-male-doctor.png" alt="Dr. Hanson" width={40} height={40} className="rounded-full" data-ai-hint="black male doctor"/>
-                <div className="grid gap-1">
-                  <p className="text-sm font-medium leading-none">
-                    Dr. Ben Hanson
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Dermatologist
-                  </p>
-                </div>
-                <div className="ml-auto font-medium">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href="/patient/book-appointment">Book</Link>
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>

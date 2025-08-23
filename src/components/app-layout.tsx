@@ -65,7 +65,6 @@ const patientNavItems: NavItem[] = [
   { href: "/patient/health-records", icon: ClipboardList, label: "Health Records" },
   { href: "/patient/appointments", icon: CalendarCheck, label: "Appointments" },
   { href: "/patient/prescriptions", icon: FileText, label: "Prescriptions" },
-  { href: "/patient/share-profile", icon: QrCode, label: "Share Profile" },
   { href: "/patient/book-appointment", icon: HeartPulse, label: "Book Appointment" },
   { href: "/patient/consult-online", icon: Video, label: "Consult Online" },
 ];
