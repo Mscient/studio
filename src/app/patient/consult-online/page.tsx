@@ -76,12 +76,16 @@ export default function ConsultOnlinePage() {
     setLoadingDoctor(doctor.id);
     
     try {
-        const consultationRef = await addDoc(collection(db, "consultations"), {
+        const consultationRef = await addDoc(collection(db, "appointments"), {
             patientId: user.uid,
             doctorId: doctor.id,
             doctorName: doctor.name,
             patientName: user.displayName || "Patient",
-            status: "initiated",
+            status: "Confirmed",
+            type: "Video",
+            reason: "Online Consultation",
+            date: new Date().toISOString().split('T')[0],
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'}),
             createdAt: serverTimestamp(),
             meetCode: `healthvision-${Date.now()}`
         });
@@ -92,7 +96,7 @@ export default function ConsultOnlinePage() {
         });
         
         const meetUrl = `https://meet.google.com/lookup/healthvision-${consultationRef.id}`;
-        window.location.href = meetUrl;
+        window.open(meetUrl, '_blank');
 
     } catch (error) {
         console.error("Error booking consultation:", error);

@@ -84,8 +84,10 @@ export default function PrescriptionsPage() {
       setPrescriptions(prescriptionsData);
       setLoading(false);
     };
-
-    fetchPrescriptions();
+    
+    if (user) {
+        fetchPrescriptions();
+    }
   }, [user]);
 
   const handleSetReminder = (medicineName: string) => {

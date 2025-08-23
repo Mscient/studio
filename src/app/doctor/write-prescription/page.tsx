@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,7 +24,8 @@ import { getPrescriptionSuggestion } from '@/lib/actions';
 import { useToast } from "@/hooks/use-toast";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, where, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
+import { Combobox } from '@/components/ui/combobox';
 
 const medicineSchema = z.object({
   name: z.string().min(1, 'Medicine name is required.'),
@@ -36,6 +37,7 @@ const medicineSchema = z.object({
 });
 
 const formSchema = z.object({
+  patientId: z.string().min(1, 'Please select a patient.'),
   patientName: z.string().min(1, 'Patient name is required.'),
   patientAge: z.preprocess(
     (a) => parseInt(z.string().parse(a), 10),
@@ -54,11 +56,26 @@ export default function WritePrescriptionPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const [user] = useAuthState(auth);
+  const [patients, setPatients] = useState<{ value: string; label: string; age: number }[]>([]);
 
+  useEffect(() => {
+    const fetchPatients = async () => {
+      const q = query(collection(db, "users"), where("role", "==", "patient"));
+      const querySnapshot = await getDocs(q);
+      const patientList = querySnapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
+          value: doc.id,
+          label: doc.data().name,
+          age: doc.data().age || 0,
+      }));
+      setPatients(patientList);
+    }
+    fetchPatients();
+  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      patientId: '',
       patientName: '',
       patientAge: 0,
       diagnosis: '',
@@ -152,13 +169,23 @@ export default function WritePrescriptionPage() {
                 <div className="grid md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="patientName"
+                    name="patientId"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="flex flex-col">
                         <FormLabel className='flex items-center gap-2'><User/> Patient Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Rahul Sharma" {...field} />
-                        </FormControl>
+                        <Combobox
+                          options={patients}
+                          value={field.value}
+                          onChange={(value) => {
+                            const selectedPatient = patients.find(p => p.value === value);
+                            if (selectedPatient) {
+                                form.setValue('patientId', selectedPatient.value);
+                                form.setValue('patientName', selectedPatient.label);
+                                form.setValue('patientAge', selectedPatient.age);
+                            }
+                          }}
+                          placeholder="Select a patient"
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -170,7 +197,7 @@ export default function WritePrescriptionPage() {
                       <FormItem>
                         <FormLabel className='flex items-center gap-2'><Calendar/> Patient Age</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="e.g., 28" {...field} />
+                          <Input type="number" placeholder="e.g., 28" {...field} readOnly />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
