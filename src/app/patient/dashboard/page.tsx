@@ -49,7 +49,7 @@ export default function PatientDashboard() {
                 <FileText className="w-8 h-8 text-primary" />
                 <span className="text-center text-sm font-medium">View Reports</span>
               </Link>
-              <Link href="#" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+              <Link href="/patient/consult-online" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <Video className="w-8 h-8 text-primary" />
                 <span className="text-center text-sm font-medium">Consult Online</span>
               </Link>

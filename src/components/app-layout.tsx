@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -16,6 +17,7 @@ import {
   X,
   BrainCircuit,
   ClipboardList,
+  Video,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -54,6 +56,7 @@ const patientNavItems: NavItem[] = [
   { href: "/patient/appointments", icon: CalendarCheck, label: "Appointments" },
   { href: "/patient/prescriptions", icon: FileText, label: "Prescriptions" },
   { href: "/patient/book-appointment", icon: HeartPulse, label: "Book Appointment" },
+  { href: "/patient/consult-online", icon: Video, label: "Consult Online" },
 ];
 
 const doctorNavItems: NavItem[] = [
