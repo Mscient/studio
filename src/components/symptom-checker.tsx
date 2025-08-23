@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Bot, Lightbulb, Loader2, Sparkles, TriangleAlert, Upload, FileText, HeartPulse } from "lucide-react";
+import { Bot, Lightbulb, Loader2, Sparkles, TriangleAlert, Upload, FileText, HeartPulse, BrainCircuit, Activity, Pill, Stethoscope, Carrot } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,9 +18,11 @@ import { Input } from "./ui/input";
 
 const formSchema = z.object({
   symptoms: z.string().min(10, "Please describe your symptoms in more detail.").max(2000),
-  labReport: z.any().optional(),
-  prescription: z.any().optional(),
-  wearableData: z.any().optional(),
+  labReport: z.string().optional(),
+  prescription: z.string().optional(),
+  treatmentHistory: z.string().optional(),
+  nutrition: z.string().optional(),
+  wearableData: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -55,6 +57,11 @@ export default function SymptomChecker() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       symptoms: "",
+      labReport: "",
+      prescription: "",
+      treatmentHistory: "",
+      nutrition: "",
+      wearableData: "",
     },
   });
 
@@ -63,15 +70,7 @@ export default function SymptomChecker() {
     setError(null);
     setAnalysis(null);
 
-    const { symptoms } = data;
-    // In a real app, file uploads would be handled properly.
-    // For this demo, we'll just pass text content.
-    const result = await getDetailedAnalysis({ 
-        symptoms,
-        labReport: "Blood sugar: 150 mg/dL, Cholesterol: 220 mg/dL",
-        prescription: "Metformin 500mg daily",
-        wearableData: "Avg heart rate: 75bpm, Avg blood glucose: 130mg/dL",
-     });
+    const result = await getDetailedAnalysis(data);
 
     if (result.success && result.data) {
       setAnalysis(result.data);
@@ -86,21 +85,21 @@ export default function SymptomChecker() {
       <Card>
         <CardHeader>
           <CardTitle>Provide Health Data</CardTitle>
-          <CardDescription>Enter your symptoms and upload any relevant health documents for a more accurate analysis.</CardDescription>
+          <CardDescription>Enter your symptoms and any other relevant health information for a more accurate analysis.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="symptoms"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Symptoms</FormLabel>
+                    <FormLabel className="flex items-center gap-2"><HeartPulse/> Current Symptoms</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="e.g., 'I feel tired all the time, have a frequent urge to urinate, and my vision is sometimes blurry.'"
-                        className="min-h-[120px]"
+                        className="min-h-[100px]"
                         {...field}
                       />
                     </FormControl>
@@ -114,9 +113,9 @@ export default function SymptomChecker() {
                 name="labReport"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lab Report (Optional)</FormLabel>
+                    <FormLabel className="flex items-center gap-2"><FileText /> Lab Report Details</FormLabel>
                     <FormControl>
-                      <Input type="file" disabled />
+                      <Textarea placeholder="Copy and paste relevant parts of your lab report. e.g., 'Blood sugar: 150 mg/dL, Cholesterol: 220 mg/dL'" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -128,9 +127,51 @@ export default function SymptomChecker() {
                 name="prescription"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Previous Prescription (Optional)</FormLabel>
+                    <FormLabel className="flex items-center gap-2"><Pill/> Current Medications</FormLabel>
                     <FormControl>
-                      <Input type="file" disabled/>
+                      <Textarea placeholder="List your current medications and dosages. e.g., 'Metformin 500mg daily'" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="treatmentHistory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><Stethoscope/> Treatment History</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Describe any past treatments or surgeries. e.g., 'Appendectomy in 2015'" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="nutrition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><Carrot/> Nutrition Details</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Describe your typical diet. e.g., 'High-protein, low-carb diet. Avoid sugary drinks.'" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="wearableData"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><Activity/> Wearable Device Data</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="e.g., 'Avg heart rate: 75bpm, Avg blood glucose: 130mg/dL, 8000 steps daily'" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
