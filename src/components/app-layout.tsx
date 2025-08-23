@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Stethoscope,
   LayoutDashboard,
@@ -42,6 +42,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "./app-logo";
+import { auth } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
+import { signOut } from "firebase/auth";
 
 type NavItem = {
   href: string;
@@ -76,8 +79,21 @@ const doctorNavItems: NavItem[] = [
 
 export function AppLayout({ children, userType }: AppLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
   const navItems = userType === "patient" ? patientNavItems : doctorNavItems;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+  const handleLogout = async () => {
+    try {
+        await signOut(auth);
+        toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+        router.push('/');
+    } catch (error) {
+        console.error("Error signing out:", error);
+        toast({ variant: "destructive", title: 'Logout Failed', description: 'There was an error while logging out.' });
+    }
+  }
 
   const NavContent = ({ isMobile = false }) => (
     <nav className={`flex flex-col items-start gap-2 px-2 ${isMobile ? 'sm:py-5 w-full' : 'py-4'}`}>
@@ -143,13 +159,13 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link
-                  href="/"
+                <button
+                  onClick={handleLogout}
                   className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
                 >
                   <LogOut className="h-5 w-5" />
                   <span className="sr-only">Logout</span>
-                </Link>
+                </button>
               </TooltipTrigger>
               <TooltipContent side="right">Logout</TooltipContent>
             </Tooltip>
@@ -192,7 +208,7 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
                 className="overflow-hidden rounded-full"
               >
                 <Avatar>
-                  <AvatarImage src={`https://placehold.co/32x32.png`} data-ai-hint={userType === 'patient' ? 'happy man' : 'happy woman'} alt="User Avatar" />
+                  <AvatarImage src={`https://i.ibb.co/yPVRrG0/happy-man.png`} data-ai-hint={userType === 'patient' ? 'happy man' : 'happy woman'} alt="User Avatar" />
                   <AvatarFallback>{userType === 'patient' ? 'AM' : 'DC'}</AvatarFallback>
                 </Avatar>
               </Button>
@@ -203,8 +219,8 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/">Logout</Link>
+              <DropdownMenuItem onClick={handleLogout}>
+                Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

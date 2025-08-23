@@ -1,30 +1,93 @@
 
+'use client';
+
+import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Briefcase, Calendar, Mail, Phone, User } from "lucide-react";
+import { Briefcase, User } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// This is a placeholder for real data fetching.
-const getPatientData = (userId: string) => {
-    // In a real application, you would fetch this data from your backend
-    // based on the userId. For now, we'll return mock data.
-    return {
-        name: "Alex Murray",
-        age: 34,
-        email: "alex.murray@example.com",
-        phone: "+1 (555) 123-4567",
-        bloodType: "O+",
-        allergies: ["Peanuts", "Pollen"],
-        conditions: ["Hypertension", "Asthma"],
-        avatarHint: "caucasian man"
-    }
+interface PatientData {
+    name: string;
+    age: number;
+    email: string;
+    phone: string;
+    bloodType: string;
+    allergies: string[];
+    conditions: string[];
+    avatarHint: string;
 }
 
-
 export default function PatientProfilePage({ params }: { params: { userId: string } }) {
-  const patient = getPatientData(params.userId);
+  const [patient, setPatient] = useState<PatientData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPatientData = async () => {
+      if (!params.userId) return;
+      try {
+        const docRef = doc(db, "users", params.userId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          // In a real app, you would have more robust type checking
+          const data = docSnap.data();
+          setPatient({
+              name: data.name || "N/A",
+              email: data.email || "N/A",
+              // Mocking data that isn't in the user record yet
+              age: data.age || 34,
+              phone: data.phone || "+1 (555) 123-4567",
+              bloodType: data.bloodType || "O+",
+              allergies: data.allergies || ["Peanuts", "Pollen"],
+              conditions: data.conditions || ["Hypertension", "Asthma"],
+              avatarHint: data.avatarHint || "person",
+          });
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error fetching patient data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatientData();
+  }, [params.userId]);
+
+  if (loading) {
+    return (
+        <AppLayout userType="patient">
+            <div className="w-full max-w-4xl mx-auto">
+                <Card className="shadow-lg">
+                    <CardHeader className="bg-card border-b">
+                        <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                            <Skeleton className="w-20 h-20 rounded-full border-4 border-primary"/>
+                            <div>
+                                <Skeleton className="h-8 w-48 mb-2" />
+                                <Skeleton className="h-6 w-32" />
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-4 grid gap-4">
+                        <Skeleton className="h-48 w-full" />
+                    </CardContent>
+                </Card>
+            </div>
+        </AppLayout>
+    )
+  }
+
+  if (!patient) {
+      return <AppLayout userType="patient"><p>Patient not found.</p></AppLayout>
+  }
+
 
   return (
     <AppLayout userType="patient">
@@ -33,7 +96,7 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
             <CardHeader className="bg-card border-b">
                  <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
                     <Avatar className="w-20 h-20 border-4 border-primary">
-                        <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint={patient.avatarHint}/>
+                        <AvatarImage src={`https://i.ibb.co/2802S44/caucasian-man.png`} data-ai-hint={patient.avatarHint}/>
                         <AvatarFallback>{patient.name.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
                     </Avatar>
                     <div>

@@ -11,19 +11,57 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLogo } from '@/components/app-logo';
+import { useToast } from '@/hooks/use-toast';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function Home() {
   const router = useRouter();
+  const { toast } = useToast();
   const [role, setRole] = useState('patient');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (event: React.FormEvent) => {
+  const handleAuth = async (event: React.FormEvent, isRegister: boolean) => {
     event.preventDefault();
-    // In a real app, you'd handle authentication here.
-    // For this demo, we'll just redirect based on the selected role.
-    if (role === 'patient') {
-      router.push('/patient/dashboard');
-    } else {
-      router.push('/doctor/dashboard');
+    setLoading(true);
+    const formData = new FormData(event.currentTarget as HTMLFormElement);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    try {
+      if (isRegister) {
+        // Registration
+        const name = formData.get('name') as string;
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Create user document in Firestore
+        await setDoc(doc(db, "users", user.uid), {
+            uid: user.uid,
+            name: name,
+            email: user.email,
+            role: role,
+            createdAt: new Date(),
+        });
+        
+        toast({ title: "Registration Successful", description: "You can now log in." });
+        router.push(role === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
+
+      } else {
+        // Login
+        await signInWithEmailAndPassword(auth, email, password);
+        toast({ title: "Login Successful" });
+        router.push(role === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: "Authentication Failed",
+        description: error.message,
+      });
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -50,10 +88,10 @@ export default function Home() {
           <TabsContent value="login">
             <div 
               className="absolute inset-0 bg-cover bg-center opacity-10" 
-              style={{ backgroundImage: 'url(https://placehold.co/450x550.png)' }} 
+              style={{ backgroundImage: 'url(https://i.ibb.co/3s6DkC2/abstract-medical.png)' }} 
               data-ai-hint="abstract medical"
             ></div>
-            <form onSubmit={handleLogin}>
+            <form onSubmit={(e) => handleAuth(e, false)}>
               <CardContent className="space-y-4 relative z-10">
                 <div className="space-y-2">
                   <Label htmlFor="role">I am a</Label>
@@ -77,19 +115,19 @@ export default function Home() {
                 </div>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="email-login" type="email" placeholder="email@example.com" className="pl-10" required />
+                  <Input name="email" id="email-login" type="email" placeholder="email@example.com" className="pl-10" required />
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="password-login" type="password" placeholder="Password" className="pl-10" required />
+                  <Input name="password" id="password-login" type="password" placeholder="Password" className="pl-10" required />
                 </div>
-                <Button type="submit" className="w-full">
-                  Login <ChevronsRight className="ml-2 h-4 w-4" />
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Logging in...' : 'Login'} <ChevronsRight className="ml-2 h-4 w-4" />
                 </Button>
                  <p className="text-center text-sm text-muted-foreground">Or continue with</p>
                 <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline">Google</Button>
-                    <Button variant="outline">Phone</Button>
+                    <Button variant="outline" type="button">Google</Button>
+                    <Button variant="outline" type="button">Phone</Button>
                 </div>
               </CardContent>
             </form>
@@ -97,10 +135,10 @@ export default function Home() {
           <TabsContent value="register">
              <div 
               className="absolute inset-0 bg-cover bg-center opacity-10" 
-              style={{ backgroundImage: 'url(https://placehold.co/600x700.png)' }}
+              style={{ backgroundImage: 'url(https://i.ibb.co/L5YxKCn/digital-health.png)' }}
               data-ai-hint="digital health"
             ></div>
-             <form onSubmit={handleLogin}>
+             <form onSubmit={(e) => handleAuth(e, true)}>
               <CardContent className="space-y-4 relative z-10">
                 <div className="space-y-2">
                   <Label htmlFor="role-register">I am a</Label>
@@ -124,22 +162,22 @@ export default function Home() {
                 </div>
                 <div className="relative">
                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="name-register" type="text" placeholder="Full Name" className="pl-10" required />
+                  <Input name="name" id="name-register" type="text" placeholder="Full Name" className="pl-10" required />
                 </div>
                  <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="email-register" type="email" placeholder="email@example.com" className="pl-10" required />
+                  <Input name="email" id="email-register" type="email" placeholder="email@example.com" className="pl-10" required />
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="password-register" type="password" placeholder="Password" className="pl-10" required />
+                  <Input name="password" id="password-register" type="password" placeholder="Password" className="pl-10" required />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="age" type="number" placeholder="Age" className="pl-10" />
+                      <Input name="age" id="age" type="number" placeholder="Age" className="pl-10" />
                     </div>
-                    <Select>
+                    <Select name="gender">
                       <SelectTrigger id="gender">
                         <SelectValue placeholder="Gender" />
                       </SelectTrigger>
@@ -152,15 +190,15 @@ export default function Home() {
                 </div>
                 <div className="relative">
                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="contact" type="tel" placeholder="Contact Number" className="pl-10" />
+                  <Input name="contact" id="contact" type="tel" placeholder="Contact Number" className="pl-10" />
                 </div>
                 <div className="relative">
                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="govt-id" type="text" placeholder="Government ID" className="pl-10" />
+                  <Input name="govtId" id="govt-id" type="text" placeholder="Government ID" className="pl-10" />
                 </div>
 
-                <Button type="submit" className="w-full">
-                  Register <ChevronsRight className="ml-2 h-4 w-4" />
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Registering...' : 'Register'} <ChevronsRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </form>
