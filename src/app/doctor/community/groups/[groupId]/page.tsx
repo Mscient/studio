@@ -1,6 +1,7 @@
 
 'use client';
 
+import React from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Paperclip, Phone, Send, Video } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
+
 
 // Mock data, in a real app this would come from an API
 const getGroupDetails = (groupId: string) => {
@@ -28,8 +31,10 @@ const messages = [
 ];
 
 
-export default function GroupChatPage({ params }: { params: { groupId: string } }) {
-  const group = getGroupDetails(params.groupId);
+export default function GroupChatPage() {
+  const params = useParams();
+  const groupId = typeof params.groupId === 'string' ? params.groupId : '';
+  const group = getGroupDetails(groupId);
 
   return (
     <AppLayout userType="doctor">
