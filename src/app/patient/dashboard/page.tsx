@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/app-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode, BrainCircuit, Pill } from "lucide-react";
+import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode, BrainCircuit, Pill, Building } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import QRCode from "qrcode.react";
@@ -45,7 +45,7 @@ export default function PatientDashboard() {
                 <HeartPulse className="w-8 h-8 text-primary" />
                 <span className="text-center text-sm font-medium">Book Doctor</span>
               </Link>
-              <Link href="/patient/prescriptions" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+              <Link href="/patient/health-records" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <FileText className="w-8 h-8 text-primary" />
                 <span className="text-center text-sm font-medium">View Reports</span>
               </Link>
@@ -60,27 +60,58 @@ export default function PatientDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Health Tips</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-4">
-                <Image src="https://placehold.co/100x100.png" alt="Healthy Food" width={80} height={80} className="rounded-lg" data-ai-hint="healthy food"/>
-                <div>
-                  <h3 className="font-semibold">Eat a Balanced Diet</h3>
-                  <p className="text-sm text-muted-foreground">Incorporate a variety of fruits, vegetables, and whole grains into your meals for better health.</p>
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl"><FileText/> Recent Lab Reports</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                      <p className="font-semibold">Annual Blood Panel</p>
+                      <p className="text-sm text-muted-foreground">General Hospital</p>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                      <Link href="/patient/health-records">View</Link>
+                  </Button>
                 </div>
-              </div>
-              <div className="flex items-start gap-4">
-                 <Image src="https://placehold.co/100x100.png" alt="Exercise" width={80} height={80} className="rounded-lg" data-ai-hint="person jogging"/>
-                 <div>
-                  <h3 className="font-semibold">Stay Active</h3>
-                  <p className="text-sm text-muted-foreground">Aim for at least 30 minutes of moderate exercise most days of the week.</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                      <p className="font-semibold">Cholesterol Check</p>
+                      <p className="text-sm text-muted-foreground">City Clinic</p>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                      <Link href="/patient/health-records">View</Link>
+                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl"><Pill/> Current Medications</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                      <p className="font-semibold">Metformin</p>
+                      <p className="text-sm text-muted-foreground">500mg, for Diabetes</p>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                      <Link href="/patient/prescriptions">Details</Link>
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                      <p className="font-semibold">Lisinopril</p>
+                      <p className="text-sm text-muted-foreground">20mg, for Hypertension</p>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                      <Link href="/patient/prescriptions">Details</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -136,38 +167,6 @@ export default function PatientDashboard() {
               </div>
             </CardContent>
           </Card>
-
-           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Pill />
-                Current Medications
-              </CardTitle>
-               <CardDescription>
-                A quick look at your current prescriptions.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <div className="flex items-center justify-between">
-                <div>
-                    <p className="font-semibold">Metformin</p>
-                    <p className="text-sm text-muted-foreground">500mg, twice a day</p>
-                </div>
-                <Button variant="outline" size="sm" asChild>
-                    <Link href="/patient/health-records">View</Link>
-                </Button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                    <p className="font-semibold">Lisinopril</p>
-                    <p className="text-sm text-muted-foreground">20mg, once a day</p>
-                </div>
-                 <Button variant="outline" size="sm" asChild>
-                    <Link href="/patient/health-records">View</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
           
           <Card>
             <CardHeader>
@@ -181,7 +180,7 @@ export default function PatientDashboard() {
                     Dr. Emily Carter
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Cardiologist
+                    Cardiologist - General Hospital
                   </p>
                 </div>
                 <div className="ml-auto font-medium">
@@ -197,7 +196,7 @@ export default function PatientDashboard() {
                     Dr. Ben Hanson
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Dermatologist
+                    Dermatologist - City Clinic
                   </p>
                 </div>
                 <div className="ml-auto font-medium">
