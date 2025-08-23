@@ -30,12 +30,13 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleAuth = async (event: React.FormEvent, isRegister: boolean) => {
+  const handleAuth = async (event: React.FormEvent<HTMLFormElement>, isRegister: boolean) => {
     event.preventDefault();
     setLoading(true);
-    const formData = new FormData(event.currentTarget as HTMLFormElement);
+    const formData = new FormData(event.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const selectedRole = formData.get('role') as string || role;
     
     try {
       if (isRegister) {
@@ -57,7 +58,7 @@ export default function Home() {
             uid: user.uid,
             name: name,
             email: user.email,
-            role: role, // Use the state variable 'role'
+            role: selectedRole,
             age: parseInt(age, 10) || null,
             gender: gender,
             phone: contact,
@@ -66,7 +67,7 @@ export default function Home() {
         });
         
         toast({ title: "Registration Successful", description: "You can now log in." });
-        router.push(role === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
+        router.push(selectedRole === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
 
       } else {
         // Login
@@ -270,5 +271,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
