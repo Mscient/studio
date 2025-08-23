@@ -192,7 +192,7 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
                 className="overflow-hidden rounded-full"
               >
                 <Avatar>
-                  <AvatarImage src={`https://placehold.co/32x32.png`} data-ai-hint={userType === 'patient' ? 'patient portrait' : 'doctor portrait'} alt="User Avatar" />
+                  <AvatarImage src={`https://placehold.co/32x32.png`} data-ai-hint={userType === 'patient' ? 'man portrait' : 'woman doctor'} alt="User Avatar" />
                   <AvatarFallback>{userType === 'patient' ? 'PA' : 'DR'}</AvatarFallback>
                 </Avatar>
               </Button>
@@ -203,7 +203,9 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/">Logout</Link>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
