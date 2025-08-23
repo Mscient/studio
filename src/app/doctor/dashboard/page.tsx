@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FilePlus, Settings, Users } from "lucide-react";
+import { FilePlus, QrCode, Settings, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -129,7 +129,7 @@ export default function DoctorDashboard() {
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <Link href="/doctor/patients" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <Users className="w-8 h-8 text-primary" />
                 <span className="text-center text-sm font-medium">My Patients</span>
@@ -137,6 +137,10 @@ export default function DoctorDashboard() {
               <Link href="#" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <FilePlus className="w-8 h-8 text-primary" />
                 <span className="text-center text-sm font-medium">Write Prescription</span>
+              </Link>
+              <Link href="/doctor/scan-qr" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+                <QrCode className="w-8 h-8 text-primary" />
+                <span className="text-center text-sm font-medium">Scan Patient QR</span>
               </Link>
               <Link href="#" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <Settings className="w-8 h-8 text-primary" />

@@ -39,7 +39,7 @@ export default function Home() {
         <p className="text-lg text-muted-foreground">Your Health, Reimagined.</p>
       </div>
 
-      <Card className="w-full max-w-md shadow-2xl">
+      <Card className="w-full max-w-md shadow-2xl overflow-hidden">
         <Tabs defaultValue="login" className="w-full">
           <CardHeader>
             <TabsList className="grid w-full grid-cols-2">
@@ -48,8 +48,13 @@ export default function Home() {
             </TabsList>
           </CardHeader>
           <TabsContent value="login">
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-10" 
+              style={{ backgroundImage: 'url(https://placehold.co/450x550.png?text=)' }} 
+              data-ai-hint="medical background"
+            ></div>
             <form onSubmit={handleLogin}>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 relative z-10">
                 <div className="space-y-2">
                   <Label htmlFor="role">I am a</Label>
                   <Select value={role} onValueChange={setRole}>
@@ -90,8 +95,13 @@ export default function Home() {
             </form>
           </TabsContent>
           <TabsContent value="register">
+             <div 
+              className="absolute inset-0 bg-cover bg-center opacity-10" 
+              style={{ backgroundImage: 'url(https://placehold.co/600x700.png?text=)' }}
+              data-ai-hint="healthcare technology"
+            ></div>
              <form onSubmit={handleLogin}>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 relative z-10">
                 <div className="space-y-2">
                   <Label htmlFor="role-register">I am a</Label>
                   <Select value={role} onValueChange={setRole}>
