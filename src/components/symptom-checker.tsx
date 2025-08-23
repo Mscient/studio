@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Bot, Lightbulb, Loader2, Sparkles, TriangleAlert, Upload, FileText, HeartPulse, BrainCircuit, Activity, Pill, Stethoscope, Carrot, FileUp } from "lucide-react";
+import { Bot, Lightbulb, Loader2, Sparkles, TriangleAlert, Upload, FileText, HeartPulse, BrainCircuit, Activity, Pill, Stethoscope, Carrot, FileUp, Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,6 +16,10 @@ import { Badge } from "@/components/ui/badge";
 import type { DetailedAnalysisOutput } from "@/ai/flows/detailed-analysis";
 import { getDetailedAnalysis } from "@/lib/actions";
 import { Input } from "./ui/input";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   symptoms: z.string().min(10, "Please describe your symptoms in more detail.").max(2000),
@@ -49,51 +53,12 @@ const UrgencyMap = {
   },
 };
 
-const FileInput = ({ field, label, icon }: { field: any; label: string, icon: React.ReactNode }) => {
-    const [fileName, setFileName] = useState<string | null>(null);
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            const file = e.target.files[0];
-            setFileName(file.name);
-            // In a real app, you'd handle the file upload here and set the field value to the file path or ID.
-            // For this demo, we'll just store the name for display and to pass to the AI flow.
-            field.onChange(file.name);
-        }
-    };
-    
-    return (
-        <FormItem>
-            <FormLabel className="flex items-center gap-2">{icon} {label}</FormLabel>
-            <FormControl>
-                 <div className="relative">
-                    <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="w-full justify-start font-normal text-muted-foreground"
-                        onClick={() => document.getElementById(field.name)?.click()}
-                    >
-                        {fileName || "Click to upload a file (e.g., PDF, JPG)"}
-                    </Button>
-                    {fileName && <p className="text-xs p-2 text-foreground truncate">{fileName}</p>}
-                    <FileUp className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                </div>
-            </FormControl>
-             <Input
-                type="file"
-                id={field.name}
-                className="hidden"
-                onChange={handleFileChange}
-            />
-            <FormMessage />
-        </FormItem>
-    )
-}
-
 export default function SymptomChecker() {
   const [analysis, setAnalysis] = useState<DetailedAnalysisOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [user] = useAuthState(auth);
+  const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -107,16 +72,46 @@ export default function SymptomChecker() {
     },
   });
 
+  const handleLoadData = async () => {
+    if (!user) {
+      toast({ variant: 'destructive', title: "Not Logged In", description: "You must be logged in to load your data." });
+      return;
+    }
+    
+    const docRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const conditions = (data.conditions || []).join(', ');
+      const allergies = (data.allergies || []).join(', ');
+      
+      let historyText = "";
+      if (conditions) historyText += `Existing Conditions: ${conditions}. `;
+      if (allergies) historyText += `Allergies: ${allergies}.`;
+
+      form.setValue("treatmentHistory", historyText.trim());
+
+      toast({
+        title: "Data Loaded",
+        description: "Your existing conditions and allergies have been loaded into the form.",
+      });
+
+    } else {
+        toast({ variant: 'destructive', title: "No Profile Found", description: "Could not find your patient profile." });
+    }
+  }
+
+
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     setError(null);
     setAnalysis(null);
 
-    // We'll simulate that we're using the file data by passing the file names
     const result = await getDetailedAnalysis({
         ...data,
-        labReport: data.labReport ? `Uploaded file: ${data.labReport}` : undefined,
-        prescription: data.prescription ? `Uploaded file: ${data.prescription}` : undefined,
+        labReport: data.labReport ? `Lab Report: ${data.labReport}` : undefined,
+        prescription: data.prescription ? `Current Medications: ${data.prescription}` : undefined,
     });
 
     if (result.success && result.data) {
@@ -131,8 +126,16 @@ export default function SymptomChecker() {
     <div className="grid md:grid-cols-2 gap-4 items-start">
       <Card>
         <CardHeader>
-          <CardTitle>Provide Health Data</CardTitle>
-          <CardDescription>Enter your symptoms and any other relevant health information for a more accurate analysis.</CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>Provide Health Data</CardTitle>
+              <CardDescription>Enter your symptoms and any other relevant health information for a more accurate analysis.</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleLoadData}>
+              <Download className="mr-2 h-4 w-4" />
+              Load My Data
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -159,7 +162,13 @@ export default function SymptomChecker() {
                 control={form.control}
                 name="labReport"
                 render={({ field }) => (
-                   <FileInput field={field} label="Lab Report Details" icon={<FileText />}/>
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><FileText/> Lab Report Details</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Copy-paste key results from your lab report. e.g., 'HbA1c: 7.8%, Fasting Glucose: 150 mg/dL'" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
 
@@ -167,7 +176,13 @@ export default function SymptomChecker() {
                 control={form.control}
                 name="prescription"
                 render={({ field }) => (
-                  <FileInput field={field} label="Current Medications" icon={<Pill/>}/>
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><Pill/> Current Medications</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="List your current medications and dosages. e.g., 'Metformin 500mg twice daily'" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
 
@@ -176,9 +191,9 @@ export default function SymptomChecker() {
                 name="treatmentHistory"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2"><Stethoscope/> Treatment History</FormLabel>
+                    <FormLabel className="flex items-center gap-2"><Stethoscope/> Medical History</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Describe any past treatments or surgeries. e.g., 'Appendectomy in 2015'" {...field} />
+                      <Textarea placeholder="Describe any past treatments, surgeries, or known conditions. e.g., 'Appendectomy in 2015, Hypertension'" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
