@@ -72,7 +72,7 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
 
   return (
     <AppLayout userType="doctor">
-       <div className="flex flex-col gap-8">
+       <div className="flex flex-col gap-4">
             <div>
                 <Button variant="outline" asChild>
                     <Link href="/doctor/appointments" className="flex items-center gap-2">
@@ -82,35 +82,35 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
             </div>
             
             <Card>
-                <CardHeader>
-                    <CardTitle>Appointment with {appointment.patientName}</CardTitle>
+                <CardHeader className="p-4">
+                    <CardTitle>{appointment.patientName}</CardTitle>
                     <CardDescription>{new Date(appointment.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {appointment.time}</CardDescription>
                     <p className="pt-2 text-sm text-muted-foreground"><strong>Reason:</strong> {appointment.reason}</p>
                 </CardHeader>
             </Card>
 
-            <div className="grid md:grid-cols-3 gap-6 items-start">
-                <div className="md:col-span-1 space-y-6">
+            <div className="grid md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-1 space-y-4">
                     <Card>
-                        <CardHeader className="items-center">
-                             <Avatar className="w-24 h-24 border-4 border-primary">
+                        <CardHeader className="items-center p-4">
+                             <Avatar className="w-20 h-20 border-4 border-primary">
                                 <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="patient portrait"/>
                                 <AvatarFallback>{patient.name.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
                             </Avatar>
                         </CardHeader>
-                        <CardContent className="text-center">
-                            <h3 className="text-xl font-bold">{patient.name}</h3>
-                            <p className="text-muted-foreground">Age: {patient.age}</p>
-                            <Button variant="outline" className="mt-4" asChild>
+                        <CardContent className="text-center p-4 pt-0">
+                            <h3 className="text-lg font-bold">{patient.name}</h3>
+                            <p className="text-muted-foreground text-sm">Age: {patient.age}</p>
+                            <Button variant="outline" size="sm" className="mt-3" asChild>
                                 <Link href={`/patient/profile/${params.appointmentId}`}>View Full Profile</Link>
                             </Button>
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-xl"><Briefcase /> Medical Details</CardTitle>
+                        <CardHeader className="p-4">
+                            <CardTitle className="flex items-center gap-2 text-lg"><Briefcase /> Medical Details</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3 text-sm">
+                        <CardContent className="space-y-3 text-sm p-4">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Blood Type</span>
                                 <span className="font-medium">{patient.bloodType}</span>
@@ -118,65 +118,65 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
                             <Separator />
                             <div>
                                 <span className="text-muted-foreground">Allergies</span>
-                                <div className="flex flex-wrap gap-2 mt-1">
+                                <div className="flex flex-wrap gap-1 mt-1">
                                     {patient.allergies.map(allergy => <Badge key={allergy} variant="secondary">{allergy}</Badge>)}
                                 </div>
                             </div>
                             <Separator />
                             <div>
                                 <span className="text-muted-foreground">Existing Conditions</span>
-                                <div className="flex flex-wrap gap-2 mt-1">
+                                <div className="flex flex-wrap gap-1 mt-1">
                                      {patient.conditions.map(condition => <Badge key={condition} variant="outline">{condition}</Badge>)}
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
-                <div className="md:col-span-2 space-y-6">
+                <div className="md:col-span-2 space-y-4">
                     <Card className="bg-accent/50 border-accent">
-                        <CardHeader>
+                        <CardHeader className="p-4">
                             <CardTitle className="flex items-center gap-2">
                                 <BrainCircuit /> AI Pre-Analysis
                             </CardTitle>
                             <CardDescription>An AI-generated summary based on the patient's latest health data.</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div className="space-y-6">
+                        <CardContent className="p-4">
+                            <div className="space-y-4">
                                 <Card className="bg-background">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2 text-lg">
+                                    <CardHeader className="p-4">
+                                        <CardTitle className="flex items-center gap-2 text-base">
                                             {UrgencyMap[aiAnalysis.urgency as keyof typeof UrgencyMap].icon}
                                             <span>Urgency: {UrgencyMap[aiAnalysis.urgency as keyof typeof UrgencyMap].label}</span>
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent>
+                                    <CardContent className="p-4 pt-0">
                                         <p className="font-semibold">{UrgencyMap[aiAnalysis.urgency as keyof typeof UrgencyMap].description}</p>
-                                        <p className="text-sm text-muted-foreground mt-1"><strong className="text-foreground">Reasoning:</strong> {aiAnalysis.explanation}</p>
+                                        <p className="text-xs text-muted-foreground mt-1"><strong className="text-foreground">Reasoning:</strong> {aiAnalysis.explanation}</p>
                                     </CardContent>
                                 </Card>
                                  <Card className="bg-background">
-                                    <CardHeader>
-                                        <CardTitle className="text-lg">Key Health Indicators</CardTitle>
+                                    <CardHeader className="p-4">
+                                        <CardTitle className="text-base">Key Health Indicators</CardTitle>
                                     </CardHeader>
-                                    <CardContent className="grid grid-cols-2 gap-4">
-                                        <div className="flex items-center gap-3">
+                                    <CardContent className="grid grid-cols-2 gap-4 p-4 pt-0">
+                                        <div className="flex items-center gap-2">
                                             <div className="p-2 bg-primary/10 rounded-full"><FileText className="w-5 h-5 text-primary"/></div>
                                             <div>
                                                 <p className="text-xs text-muted-foreground">Blood Sugar</p>
-                                                <p className="font-bold text-base">{aiAnalysis.keyIndicators.bloodSugar}</p>
+                                                <p className="font-bold text-sm">{aiAnalysis.keyIndicators.bloodSugar}</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2">
                                             <div className="p-2 bg-primary/10 rounded-full"><HeartPulse className="w-5 h-5 text-primary"/></div>
                                             <div>
                                                 <p className="text-xs text-muted-foreground">Heart Rate</p>
-                                                <p className="font-bold text-base">{aiAnalysis.keyIndicators.heartRate}</p>
+                                                <p className="font-bold text-sm">{aiAnalysis.keyIndicators.heartRate}</p>
                                             </div>
                                         </div>
                                     </CardContent>
                                 </Card>
                                 <div>
-                                    <h4 className="font-semibold mb-2">Detailed Report</h4>
+                                    <h4 className="font-semibold mb-2 text-base">Detailed Report</h4>
                                     <p className="text-sm whitespace-pre-wrap text-muted-foreground">{aiAnalysis.report}</p>
                                 </div>
                             </div>

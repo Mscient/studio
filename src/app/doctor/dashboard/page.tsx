@@ -64,7 +64,7 @@ const UrgencyMap = {
 export default function DoctorDashboard() {
   return (
     <AppLayout userType="doctor">
-      <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+      <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
@@ -151,22 +151,22 @@ export default function DoctorDashboard() {
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <Link href="/doctor/patients" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
-                <Users className="w-8 h-8 text-primary" />
-                <span className="text-center text-sm font-medium">My Patients</span>
+            <CardContent className="grid grid-cols-2 gap-2">
+              <Link href="/doctor/patients" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+                <Users className="w-7 h-7 text-primary" />
+                <span className="text-center text-xs font-medium">My Patients</span>
               </Link>
-              <Link href="/doctor/write-prescription" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
-                <FilePlus className="w-8 h-8 text-primary" />
-                <span className="text-center text-sm font-medium">Write Prescription</span>
+              <Link href="/doctor/write-prescription" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+                <FilePlus className="w-7 h-7 text-primary" />
+                <span className="text-center text-xs font-medium">Write Prescription</span>
               </Link>
-              <Link href="/doctor/scan-qr" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
-                <QrCode className="w-8 h-8 text-primary" />
-                <span className="text-center text-sm font-medium">Scan Patient QR</span>
+              <Link href="/doctor/scan-qr" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+                <QrCode className="w-7 h-7 text-primary" />
+                <span className="text-center text-xs font-medium">Scan Patient QR</span>
               </Link>
-              <Link href="/doctor/community" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
-                <MessageSquare className="w-8 h-8 text-primary" />
-                <span className="text-center text-sm font-medium">Community</span>
+              <Link href="/doctor/community" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+                <MessageSquare className="w-7 h-7 text-primary" />
+                <span className="text-center text-xs font-medium">Community</span>
               </Link>
             </CardContent>
           </Card>
