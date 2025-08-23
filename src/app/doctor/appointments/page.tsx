@@ -96,7 +96,7 @@ export default function AppointmentsPage() {
                             appointments.map(apt => (
                             <TableRow key={apt.id}>
                                 <TableCell className="font-medium">{apt.patientName}</TableCell>
-                                <TableCell>{apt.date}</TableCell>
+                                <TableCell>{new Date(apt.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</TableCell>
                                 <TableCell>{apt.time}</TableCell>
                                 <TableCell><Badge variant={apt.type === "Video" ? "default" : "secondary"}>{apt.type}</Badge></TableCell>
                                 <TableCell>
