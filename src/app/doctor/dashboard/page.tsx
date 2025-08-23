@@ -10,24 +10,28 @@ import Link from "next/link";
 
 const appointments = [
   {
+    id: "apt_1",
     patient: "Liam Johnson",
     time: "9:00 AM - 9:30 AM",
     status: "Confirmed",
     type: "Video"
   },
   {
+    id: "apt_2",
     patient: "Olivia Smith",
     time: "10:00 AM - 10:30 AM",
     status: "Confirmed",
     type: "In-Person"
   },
   {
+    id: "apt_3",
     patient: "Noah Williams",
     time: "11:00 AM - 11:30 AM",
     status: "Pending",
     type: "Video"
   },
     {
+    id: "apt_4",
     patient: "Emma Brown",
     time: "1:00 PM - 1:30 PM",
     status: "Confirmed",
@@ -107,7 +111,9 @@ export default function DoctorDashboard() {
                          <Badge variant={apt.status === "Confirmed" ? "outline" : "destructive"}>{apt.status}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Button size="sm">View</Button>
+                        <Button size="sm" asChild>
+                          <Link href={`/doctor/appointments/${apt.id}`}>View</Link>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
