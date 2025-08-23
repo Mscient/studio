@@ -5,6 +5,7 @@ import { symptomAnalysis, SymptomAnalysisInput } from "@/ai/flows/symptom-analys
 import { detailedAnalysis, DetailedAnalysisInput } from "@/ai/flows/detailed-analysis";
 import { prescriptionSuggestion, PrescriptionSuggestionInput } from "@/ai/flows/prescription-suggestion";
 import { medicalResearchUpdates } from "@/ai/flows/medical-research-updates";
+import { dailyHealthTrends } from "@/ai/flows/daily-trends";
 
 export async function getSymptomAnalysis(input: SymptomAnalysisInput) {
   try {
@@ -47,5 +48,16 @@ export async function getMedicalResearchUpdates() {
     console.error(e);
     const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred.";
     return { success: false, error: `Medical research updates failed: ${errorMessage}` };
+  }
+}
+
+export async function getDailyHealthTrends() {
+  try {
+    const output = await dailyHealthTrends();
+    return { success: true, data: output };
+  } catch (e) {
+    console.error(e);
+    const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred.";
+    return { success: false, error: `Daily health trends failed: ${errorMessage}` };
   }
 }

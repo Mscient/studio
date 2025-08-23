@@ -7,11 +7,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, MessageSquare, ThumbsUp, BrainCircuit, Share2, Plus, Calendar, CheckCircle, FlaskConical, Users, Vote, PlusCircle } from 'lucide-react';
-import { getMedicalResearchUpdates } from '@/lib/actions';
+import { Loader2, MessageSquare, ThumbsUp, BrainCircuit, Share2, Plus, Calendar, CheckCircle, FlaskConical, Users, Vote, PlusCircle, TrendingUp, Rss } from 'lucide-react';
+import { getMedicalResearchUpdates, getDailyHealthTrends } from '@/lib/actions';
 import type { MedicalResearchUpdate } from '@/ai/flows/medical-research-updates';
+import type { DailyHealthTrend } from '@/ai/flows/daily-trends';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 const myGroups = [
   { id: 1, name: "Cardiology Case Studies", members: 45, description: "Discussing complex cardiology cases." },
@@ -21,18 +23,31 @@ const myGroups = [
 
 export default function CommunityPage() {
   const [updates, setUpdates] = useState<MedicalResearchUpdate[]>([]);
+  const [trends, setTrends] = useState<DailyHealthTrend[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingTrends, setLoadingTrends] = useState(true);
 
   useEffect(() => {
-    const fetchUpdates = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      const result = await getMedicalResearchUpdates();
-      if (result.success && result.data) {
-        setUpdates(result.data);
+      setLoadingTrends(true);
+      
+      const researchPromise = getMedicalResearchUpdates();
+      const trendsPromise = getDailyHealthTrends();
+
+      const [researchResult, trendsResult] = await Promise.all([researchPromise, trendsPromise]);
+
+      if (researchResult.success && researchResult.data) {
+        setUpdates(researchResult.data);
       }
       setLoading(false);
+
+      if (trendsResult.success && trendsResult.data) {
+        setTrends(trendsResult.data);
+      }
+      setLoadingTrends(false);
     };
-    fetchUpdates();
+    fetchData();
   }, []);
 
   return (
@@ -45,7 +60,7 @@ export default function CommunityPage() {
               Medical Community Hub
             </CardTitle>
             <CardDescription>
-              Connect with peers, discuss cases, and stay updated on the latest medical research.
+              Connect with peers, discuss cases, and stay updated on the latest medical research and trends.
             </CardDescription>
              <div className='pt-2'>
                 <Button><Plus className='mr-2'/> Create Post</Button>
@@ -55,7 +70,7 @@ export default function CommunityPage() {
         
         <div className="grid md:grid-cols-3 gap-6 items-start">
             <div className="md:col-span-2 space-y-6">
-                <h2 className="text-2xl font-bold">Latest Research & News</h2>
+                <h2 className="text-2xl font-bold flex items-center gap-2"><Rss/> Latest Research & News</h2>
                 {loading ? (
                     <div className="flex justify-center items-center h-48">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -111,22 +126,43 @@ export default function CommunityPage() {
             <div className="space-y-6">
                  <Card>
                     <CardHeader>
+                        <CardTitle className='flex items-center gap-2'><TrendingUp/> Daily Health Trends</CardTitle>
+                    </CardHeader>
+                    <CardContent className='space-y-3'>
+                       {loadingTrends ? (
+                         <div className="flex justify-center items-center h-24">
+                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        </div>
+                       ) : (
+                         trends.map(trend => (
+                            <div key={trend.title} className="p-2 rounded-md hover:bg-accent/50">
+                                <p className="font-semibold">{trend.title}</p>
+                                <p className="text-xs text-muted-foreground">{trend.summary}</p>
+                            </div>
+                         ))
+                       )}
+                    </CardContent>
+                 </Card>
+                 <Card>
+                    <CardHeader>
                         <CardTitle className='flex items-center justify-between'>
                             <span>My Groups</span>
                             <Button variant="ghost" size="icon"><PlusCircle className='w-5 h-5 text-muted-foreground'/></Button>
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className='space-y-3'>
+                    <CardContent className='space-y-1'>
                         {myGroups.map(group => (
-                             <div key={group.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50">
-                                <div className='p-2 bg-secondary rounded-md'>
-                                    <Users className='w-5 h-5 text-secondary-foreground'/>
+                             <Link key={group.id} href={`/doctor/community/groups/${group.id}`} className="block">
+                                <div className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50">
+                                    <div className='p-2 bg-secondary rounded-md'>
+                                        <Users className='w-5 h-5 text-secondary-foreground'/>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold">{group.name}</p>
+                                        <p className="text-xs text-muted-foreground">{group.members} members</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="font-semibold">{group.name}</p>
-                                    <p className="text-xs text-muted-foreground">{group.members} members</p>
-                                </div>
-                            </div>
+                            </Link>
                         ))}
                     </CardContent>
                 </Card>
