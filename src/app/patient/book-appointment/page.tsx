@@ -9,10 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
 
 const doctors = [
-    { name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, experience: "15 years", fee: "$150", avatarHint: "female doctor" },
-    { name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, experience: "10 years", fee: "$120", avatarHint: "male doctor" },
-    { name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, experience: "12 years", fee: "$100", avatarHint: "asian doctor" },
-    { name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, experience: "20 years", fee: "$200", avatarHint: "black doctor" },
+    { name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, experience: "15 years", fee: "$150", avatarHint: "caucasian female doctor" },
+    { name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, experience: "10 years", fee: "$120", avatarHint: "black male doctor" },
+    { name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, experience: "12 years", fee: "$100", avatarHint: "east asian female doctor" },
+    { name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, experience: "20 years", fee: "$200", avatarHint: "white male doctor" },
 ];
 
 export default function BookAppointmentPage() {

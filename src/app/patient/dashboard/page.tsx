@@ -172,7 +172,7 @@ export default function PatientDashboard() {
             </CardHeader>
             <CardContent className="grid gap-3 p-4">
               <div className="flex items-center gap-4">
-                <Image src="https://placehold.co/40x40.png" alt="Dr. Carter" width={40} height={40} className="rounded-full" data-ai-hint="female doctor"/>
+                <Image src="https://placehold.co/40x40.png" alt="Dr. Carter" width={40} height={40} className="rounded-full" data-ai-hint="caucasian female doctor"/>
                 <div className="grid gap-1">
                   <p className="text-sm font-medium leading-none">
                     Dr. Emily Carter
@@ -188,7 +188,7 @@ export default function PatientDashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <Image src="https://placehold.co/40x40.png" alt="Dr. Hanson" width={40} height={40} className="rounded-full" data-ai-hint="male doctor"/>
+                <Image src="https://placehold.co/40x40.png" alt="Dr. Hanson" width={40} height={40} className="rounded-full" data-ai-hint="black male doctor"/>
                 <div className="grid gap-1">
                   <p className="text-sm font-medium leading-none">
                     Dr. Ben Hanson

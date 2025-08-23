@@ -64,7 +64,7 @@ const prescriptions = [
     diagnosis: "Type 2 Diabetes Mellitus + Hypertension",
     date: "2024-07-25",
     avatarUrl: "https://placehold.co/40x40.png",
-    avatarHint: "male doctor",
+    avatarHint: "indian male doctor",
     medicines: [
       {
         name: "Metformin 500 mg",
