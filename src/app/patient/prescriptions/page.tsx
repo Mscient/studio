@@ -113,9 +113,9 @@ export default function PrescriptionsPage() {
           </CardHeader>
         </Card>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           {prescriptions.map((prescription) => (
-            <Card key={prescription.id} className="shadow-md">
+            <Card key={prescription.id} className="shadow-lg">
               <CardHeader>
                 <div className="flex flex-col sm:flex-row justify-between gap-2 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
