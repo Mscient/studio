@@ -1,16 +1,20 @@
 
+"use client";
+
+import { useState } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, Video } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Star, Video, Loader2 } from "lucide-react";
 
 const doctors = [
-    { name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, status: "Online", isCurrent: true },
-    { name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, status: "Online", isCurrent: false },
-    { name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, status: "Offline", isCurrent: false },
-    { name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, status: "Online", isCurrent: false },
+    { name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, status: "Online", experience: "15 years", isCurrent: true },
+    { name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, status: "Online", experience: "10 years", isCurrent: false },
+    { name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, status: "Offline", experience: "12 years", isCurrent: false },
+    { name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, status: "Online", experience: "20 years", isCurrent: false },
 ];
 
 // Sort doctors to show the current one first, then by online status
@@ -23,6 +27,21 @@ const sortedDoctors = doctors.sort((a, b) => {
 });
 
 export default function ConsultOnlinePage() {
+  const { toast } = useToast();
+  const [loadingDoctor, setLoadingDoctor] = useState<string | null>(null);
+
+  const handleConsult = (doctorName: string) => {
+    setLoadingDoctor(doctorName);
+    setTimeout(() => {
+      setLoadingDoctor(null);
+      toast({
+        title: "Consultation Booked!",
+        description: `Your video call with ${doctorName} is starting.`,
+      });
+      // In a real app, you would redirect to the video call page here.
+    }, 1500);
+  };
+  
   return (
     <AppLayout userType="patient">
       <div className="flex flex-col gap-4">
@@ -45,6 +64,10 @@ export default function ConsultOnlinePage() {
                         <CardDescription>{doctor.specialization}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                         <div className="flex justify-between items-center text-sm text-muted-foreground">
+                            <span>Experience</span>
+                            <span className="font-semibold text-foreground">{doctor.experience}</span>
+                        </div>
                         <div className="flex justify-between items-center text-sm text-muted-foreground">
                             <span>Rating</span>
                             <div className="flex items-center gap-1 font-semibold text-foreground">
@@ -58,9 +81,17 @@ export default function ConsultOnlinePage() {
                                 {doctor.status}
                             </Badge>
                         </div>
-                        <Button className="w-full" disabled={doctor.status !== 'Online'}>
-                            <Video className="mr-2 h-4 w-4"/>
-                            Consult Now
+                        <Button 
+                          className="w-full" 
+                          disabled={doctor.status !== 'Online' || !!loadingDoctor}
+                          onClick={() => handleConsult(doctor.name)}
+                        >
+                            {loadingDoctor === doctor.name ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                            ) : (
+                              <Video className="mr-2 h-4 w-4"/>
+                            )}
+                            {loadingDoctor === doctor.name ? "Booking..." : "Consult Now"}
                         </Button>
                     </CardContent>
                 </Card>
@@ -70,4 +101,3 @@ export default function ConsultOnlinePage() {
     </AppLayout>
   );
 }
-
