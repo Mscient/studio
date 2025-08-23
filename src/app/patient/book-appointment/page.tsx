@@ -1,8 +1,11 @@
+
+'use client';
+
 import { AppLayout } from "@/components/app-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
 
 const doctors = [
@@ -13,6 +16,15 @@ const doctors = [
 ];
 
 export default function BookAppointmentPage() {
+  const { toast } = useToast();
+
+  const handleBooking = (doctorName: string) => {
+    toast({
+      title: "Appointment Booked!",
+      description: `Your appointment with ${doctorName} has been confirmed.`,
+    });
+  };
+
   return (
     <AppLayout userType="patient">
       <div className="flex flex-col gap-4">
@@ -48,7 +60,7 @@ export default function BookAppointmentPage() {
                                 <Star className="w-4 h-4 fill-primary text-primary" /> {doctor.rating}
                             </div>
                         </div>
-                        <Button className="w-full">Book Now</Button>
+                        <Button className="w-full" onClick={() => handleBooking(doctor.name)}>Book Now</Button>
                     </CardContent>
                 </Card>
             ))}

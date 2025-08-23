@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { getPrescriptionSuggestion } from '@/lib/actions';
 import type { PrescriptionSuggestionOutput } from '@/ai/flows/prescription-suggestion';
-import { Separator } from '@/components/ui/separator';
+import { useToast } from "@/hooks/use-toast";
 
 const medicineSchema = z.object({
   name: z.string().min(1, 'Medicine name is required.'),
@@ -49,6 +49,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function WritePrescriptionPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -81,6 +82,10 @@ export default function WritePrescriptionPage() {
     if (result.success && result.data) {
       const suggestedMedicines = result.data.medicines.map(med => ({...med}));
       replace(suggestedMedicines);
+       toast({
+        title: "AI Suggestions Generated",
+        description: "The suggested medications have been added to the form.",
+      });
     } else {
       setError(result.error || 'An unknown error occurred.');
     }
@@ -90,7 +95,11 @@ export default function WritePrescriptionPage() {
   const onSubmit = (data: FormValues) => {
     console.log('Prescription submitted:', data);
     // Here you would typically send the data to your backend to save it.
-    alert('Prescription saved successfully!');
+    toast({
+        title: "Prescription Saved",
+        description: "The new prescription has been saved successfully.",
+    });
+    form.reset();
   };
 
   return (

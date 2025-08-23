@@ -1,9 +1,12 @@
 
+'use client';
+
 import { AppLayout } from "@/components/app-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { Calendar, CheckCircle, Clock, Video, XCircle } from "lucide-react";
 
 const upcomingAppointments = [
@@ -18,6 +21,14 @@ const pastAppointments = [
 
 
 export default function AppointmentsPage() {
+  const { toast } = useToast();
+
+  const handleAction = (message: string) => {
+    toast({
+      description: message,
+    });
+  };
+
   return (
     <AppLayout userType="patient">
       <div className="flex flex-col gap-4">
@@ -59,9 +70,9 @@ export default function AppointmentsPage() {
                                    </div>
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button>Join Video Call</Button>
-                                    <Button variant="outline">Reschedule</Button>
-                                     <Button variant="destructive">Cancel</Button>
+                                    <Button onClick={() => handleAction('Joining video call...')}>Join Video Call</Button>
+                                    <Button variant="outline" onClick={() => handleAction('Reschedule request sent.')}>Reschedule</Button>
+                                     <Button variant="destructive" onClick={() => handleAction('Appointment cancelled.')}>Cancel</Button>
                                 </div>
                             </CardContent>
                         </Card>
@@ -97,8 +108,8 @@ export default function AppointmentsPage() {
                                    </div>
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button variant="secondary">View Consultation Notes</Button>
-                                    <Button variant="outline">Book Again</Button>
+                                    <Button variant="secondary" onClick={() => handleAction('Opening consultation notes...')}>View Consultation Notes</Button>
+                                    <Button variant="outline" onClick={() => handleAction(`Redirecting to book with ${apt.doctor}...`)}>Book Again</Button>
                                 </div>
                             </CardContent>
                         </Card>
