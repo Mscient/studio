@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Stethoscope, User, Mail, Lock, Building, Phone, Calendar, ChevronsRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -178,6 +178,8 @@ export default function Home() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input name="password" id="password-login" type="password" placeholder="Password" className="pl-10" required />
                 </div>
+              </CardContent>
+              <CardFooter className="relative z-10 flex-col gap-4">
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Logging in...' : 'Login'} <ChevronsRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -185,7 +187,7 @@ export default function Home() {
                 <div className="grid grid-cols-1 gap-4">
                     <Button variant="outline" type="button" onClick={handleGoogleSignIn} disabled={loading}>Google</Button>
                 </div>
-              </CardContent>
+              </CardFooter>
             </form>
           </TabsContent>
           <TabsContent value="register">
@@ -252,7 +254,8 @@ export default function Home() {
                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input name="govtId" id="govt-id" type="text" placeholder="Government ID" className="pl-10" />
                 </div>
-
+              </CardContent>
+              <CardFooter className="relative z-10 flex-col gap-4">
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Registering...' : 'Register'} <ChevronsRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -260,7 +263,7 @@ export default function Home() {
                 <div className="grid grid-cols-1 gap-4">
                     <Button variant="outline" type="button" onClick={handleGoogleSignIn} disabled={loading}>Google</Button>
                 </div>
-              </CardContent>
+              </CardFooter>
             </form>
           </TabsContent>
         </Tabs>
@@ -271,3 +274,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
