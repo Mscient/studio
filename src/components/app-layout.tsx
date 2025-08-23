@@ -15,7 +15,7 @@ import {
   Menu,
   X,
   BrainCircuit,
-  ClipboardHeart,
+  ClipboardList,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,7 @@ type AppLayoutProps = {
 const patientNavItems: NavItem[] = [
   { href: "/patient/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/patient/detailed-analysis", icon: BrainCircuit, label: "AI Detailed Analysis" },
-  { href: "/patient/health-records", icon: ClipboardHeart, label: "Health Records" },
+  { href: "/patient/health-records", icon: ClipboardList, label: "Health Records" },
   { href: "/patient/appointments", icon: CalendarCheck, label: "Appointments" },
   { href: "/patient/prescriptions", icon: FileText, label: "Prescriptions" },
   { href: "/patient/book-appointment", icon: HeartPulse, label: "Book Appointment" },

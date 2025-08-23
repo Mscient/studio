@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/app-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode, BrainCircuit } from "lucide-react";
+import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode, BrainCircuit, Pill } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import QRCode from "qrcode.react";
@@ -133,6 +133,38 @@ export default function PatientDashboard() {
                   <p className="text-sm text-muted-foreground">July 25, 2024 at 2:30 PM</p>
                 </div>
                 <Badge variant="default" className="ml-auto">Confirmed</Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+           <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Pill />
+                Current Medications
+              </CardTitle>
+               <CardDescription>
+                A quick look at your current prescriptions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                    <p className="font-semibold">Metformin</p>
+                    <p className="text-sm text-muted-foreground">500mg, twice a day</p>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                    <Link href="/patient/health-records">View</Link>
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                    <p className="font-semibold">Lisinopril</p>
+                    <p className="text-sm text-muted-foreground">20mg, once a day</p>
+                </div>
+                 <Button variant="outline" size="sm" asChild>
+                    <Link href="/patient/health-records">View</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
