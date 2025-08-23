@@ -14,6 +14,8 @@ import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getDetailedAnalysis } from "@/lib/actions";
+import { DetailedAnalysisOutput } from "@/ai/flows/detailed-analysis";
 
 interface Patient {
     name: string;
@@ -34,16 +36,6 @@ interface Appointment {
     date: string;
     type: string;
     reason: string;
-}
-
-interface AiAnalysis {
-    report: string;
-    keyIndicators: {
-        bloodSugar: string;
-        heartRate: string;
-    };
-    urgency: string;
-    explanation: string;
 }
 
 const UrgencyMap = {
@@ -67,8 +59,9 @@ const UrgencyMap = {
 export default function AppointmentDetailsPage({ params }: { params: { appointmentId: string } }) {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [appointment, setAppointment] = useState<Appointment | null>(null);
-  const [aiAnalysis, setAiAnalysis] = useState<AiAnalysis | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<DetailedAnalysisOutput | null>(null);
   const [loading, setLoading] = useState(true);
+  const [analysisLoading, setAnalysisLoading] = useState(true);
   const routerParams = useParams();
   const appointmentId = typeof routerParams.appointmentId === 'string' ? routerParams.appointmentId : '';
 
@@ -77,7 +70,6 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
         if (!id) return;
         setLoading(true);
 
-        // Fetch appointment data
         const appointmentRef = doc(db, 'appointments', id);
         const appointmentSnap = await getDoc(appointmentRef);
 
@@ -90,7 +82,6 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
         const appointmentData = appointmentSnap.data();
         const patientId = appointmentData.patientId;
         
-        // Fetch patient data
         const patientRef = doc(db, 'users', patientId);
         const patientSnap = await getDoc(patientRef);
         
@@ -106,9 +97,9 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
             age: patientData.age,
             email: patientData.email,
             phone: patientData.phone,
-            bloodType: patientData.bloodType || "A+", // Mock
-            allergies: patientData.allergies || ["Penicillin"], // Mock
-            conditions: patientData.conditions || ["Type 1 Diabetes"], // Mock
+            bloodType: patientData.bloodType || "A+",
+            allergies: patientData.allergies || ["Penicillin"],
+            conditions: patientData.conditions || ["Type 1 Diabetes"],
             avatarHint: patientData.avatarHint || 'person'
         };
         setPatient(fetchedPatient);
@@ -123,26 +114,34 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
             reason: appointmentData.reason
         };
         setAppointment(fetchedAppointment);
-        
-        // Mock AI Analysis data
-        setAiAnalysis({
-            report: "The patient's described symptoms of fatigue and frequent urination, combined with wearable data showing elevated blood glucose levels, are consistent with their existing diagnosis of Type 1 Diabetes. The provided lab report confirms a recent HbA1c of 7.8%, which is higher than the target range, suggesting a need for adjustment in their insulin regimen. No new acute issues are immediately apparent from the provided data, but a consultation to discuss lifestyle factors and medication adherence is recommended.",
-            keyIndicators: {
-                bloodSugar: "180 mg/dL (avg)",
-                heartRate: "72 bpm (avg)",
-            },
-            urgency: appointmentData.urgency || "routine",
-            explanation: "Symptoms are consistent with a known chronic condition that needs ongoing management. No signs of acute distress are present.",
+        setLoading(false);
+
+        setAnalysisLoading(true);
+        const analysisResult = await getDetailedAnalysis({
+            symptoms: fetchedAppointment.reason,
+            treatmentHistory: fetchedPatient.conditions.join(', '),
         });
 
-        setLoading(false);
+        if (analysisResult.success && analysisResult.data) {
+            setAiAnalysis(analysisResult.data);
+        } else {
+            console.error("AI Analysis failed:", analysisResult.error);
+            // Set a default error state for AI analysis
+            setAiAnalysis({
+                report: "Could not generate AI analysis for this appointment.",
+                keyIndicators: { bloodSugar: "N/A", heartRate: "N/A" },
+                urgency: "routine",
+                explanation: "The AI model could not process the appointment details."
+            });
+        }
+        setAnalysisLoading(false);
     }
     
     fetchAppointmentDetails(appointmentId);
 
   }, [appointmentId]);
   
-  if (loading || !appointment || !patient || !aiAnalysis) {
+  if (loading || !appointment || !patient) {
     return (
         <AppLayout userType="doctor">
             <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
@@ -223,45 +222,52 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
                             <CardDescription>An AI-generated summary based on the patient's latest health data.</CardDescription>
                         </CardHeader>
                         <CardContent className="p-4">
-                            <div className="space-y-4">
-                                <Card className="bg-background">
-                                    <CardHeader className="p-4">
-                                        <CardTitle className="flex items-center gap-2 text-base">
-                                            {UrgencyMap[aiAnalysis.urgency as keyof typeof UrgencyMap].icon}
-                                            <span>Urgency: {UrgencyMap[aiAnalysis.urgency as keyof typeof UrgencyMap].label}</span>
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-4 pt-0">
-                                        <p className="font-semibold">{UrgencyMap[aiAnalysis.urgency as keyof typeof UrgencyMap].description}</p>
-                                        <p className="text-xs text-muted-foreground mt-1"><strong className="text-foreground">Reasoning:</strong> {aiAnalysis.explanation}</p>
-                                    </CardContent>
-                                </Card>
-                                 <Card className="bg-background">
-                                    <CardHeader className="p-4 border-b">
-                                        <CardTitle className="text-base">Key Health Indicators</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="grid grid-cols-2 gap-4 p-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-2 bg-primary/10 rounded-full"><FileText className="w-5 h-5 text-primary"/></div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Blood Sugar</p>
-                                                <p className="font-bold text-sm">{aiAnalysis.keyIndicators.bloodSugar}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-2 bg-primary/10 rounded-full"><HeartPulse className="w-5 h-5 text-primary"/></div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Heart Rate</p>
-                                                <p className="font-bold text-sm">{aiAnalysis.keyIndicators.heartRate}</p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                                <div>
-                                    <h4 className="font-semibold mb-2 text-base">Detailed Report</h4>
-                                    <p className="text-sm whitespace-pre-wrap text-muted-foreground">{aiAnalysis.report}</p>
+                            {analysisLoading || !aiAnalysis ? (
+                                <div className="flex flex-col items-center justify-center p-8 space-y-4">
+                                    <Loader2 className="h-10 w-10 text-primary animate-spin"/>
+                                    <p className="text-md font-medium text-muted-foreground">AI is running analysis...</p>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <Card className="bg-background">
+                                        <CardHeader className="p-4">
+                                            <CardTitle className="flex items-center gap-2 text-base">
+                                                {UrgencyMap[aiAnalysis.urgency as keyof typeof UrgencyMap].icon}
+                                                <span>Urgency: {UrgencyMap[aiAnalysis.urgency as keyof typeof UrgencyMap].label}</span>
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="p-4 pt-0">
+                                            <p className="font-semibold">{UrgencyMap[aiAnalysis.urgency as keyof typeof UrgencyMap].description}</p>
+                                            <p className="text-xs text-muted-foreground mt-1"><strong className="text-foreground">Reasoning:</strong> {aiAnalysis.explanation}</p>
+                                        </CardContent>
+                                    </Card>
+                                    <Card className="bg-background">
+                                        <CardHeader className="p-4 border-b">
+                                            <CardTitle className="text-base">Key Health Indicators</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="grid grid-cols-2 gap-4 p-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-2 bg-primary/10 rounded-full"><FileText className="w-5 h-5 text-primary"/></div>
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground">Blood Sugar</p>
+                                                    <p className="font-bold text-sm">{aiAnalysis.keyIndicators.bloodSugar}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-2 bg-primary/10 rounded-full"><HeartPulse className="w-5 h-5 text-primary"/></div>
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground">Heart Rate</p>
+                                                    <p className="font-bold text-sm">{aiAnalysis.keyIndicators.heartRate}</p>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    <div>
+                                        <h4 className="font-semibold mb-2 text-base">Detailed Report</h4>
+                                        <p className="text-sm whitespace-pre-wrap text-muted-foreground">{aiAnalysis.report}</p>
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
