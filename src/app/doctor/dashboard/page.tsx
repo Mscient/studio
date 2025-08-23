@@ -1,9 +1,10 @@
+
 import { AppLayout } from "@/components/app-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FilePlus, QrCode, Settings, Users } from "lucide-react";
+import { FilePlus, MessageSquare, QrCode, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -38,7 +39,7 @@ export default function DoctorDashboard() {
   return (
     <AppLayout userType="doctor">
       <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Upcoming Appointments</CardDescription>
@@ -69,17 +70,6 @@ export default function DoctorDashboard() {
             <CardContent>
               <div className="text-xs text-muted-foreground">
                 Respond to them now
-              </div>
-            </CardContent>
-          </Card>
-           <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Earnings this month</CardDescription>
-              <CardTitle className="text-4xl">$5,329</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xs text-muted-foreground">
-                +10.1% from last month
               </div>
             </CardContent>
           </Card>
@@ -142,9 +132,9 @@ export default function DoctorDashboard() {
                 <QrCode className="w-8 h-8 text-primary" />
                 <span className="text-center text-sm font-medium">Scan Patient QR</span>
               </Link>
-              <Link href="#" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
-                <Settings className="w-8 h-8 text-primary" />
-                <span className="text-center text-sm font-medium">Set Availability</span>
+              <Link href="/doctor/community" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+                <MessageSquare className="w-8 h-8 text-primary" />
+                <span className="text-center text-sm font-medium">Community</span>
               </Link>
             </CardContent>
           </Card>
