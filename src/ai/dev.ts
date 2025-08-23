@@ -3,3 +3,4 @@ config();
 
 import '@/ai/flows/symptom-analysis.ts';
 import '@/ai/flows/detailed-analysis.ts';
+import '@/ai/flows/prescription-suggestion.ts';

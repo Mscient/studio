@@ -134,7 +134,7 @@ export default function DoctorDashboard() {
                 <Users className="w-8 h-8 text-primary" />
                 <span className="text-center text-sm font-medium">My Patients</span>
               </Link>
-              <Link href="#" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+              <Link href="/doctor/write-prescription" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <FilePlus className="w-8 h-8 text-primary" />
                 <span className="text-center text-sm font-medium">Write Prescription</span>
               </Link>

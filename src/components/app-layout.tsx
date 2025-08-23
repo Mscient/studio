@@ -19,6 +19,7 @@ import {
   ClipboardList,
   Video,
   QrCode,
+  FilePlus,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,7 @@ const doctorNavItems: NavItem[] = [
   { href: "/doctor/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/doctor/appointments", icon: CalendarCheck, label: "Appointments" },
   { href: "/doctor/patients", icon: Users, label: "My Patients" },
+  { href: "/doctor/write-prescription", icon: FilePlus, label: "Write Prescription" },
   { href: "/doctor/scan-qr", icon: QrCode, label: "Scan Patient QR" },
 ];
 
