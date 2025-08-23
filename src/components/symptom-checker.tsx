@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Bot, Lightbulb, Loader2, Sparkles, TriangleAlert, Upload, FileText, HeartPulse, BrainCircuit, Activity, Pill, Stethoscope, Carrot } from "lucide-react";
+import { Bot, Lightbulb, Loader2, Sparkles, TriangleAlert, Upload, FileText, HeartPulse, BrainCircuit, Activity, Pill, Stethoscope, Carrot, FileUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -48,6 +49,46 @@ const UrgencyMap = {
   },
 };
 
+const FileInput = ({ field, label }: { field: any; label: string }) => {
+    const [fileName, setFileName] = useState<string | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setFileName(e.target.files[0].name);
+            // In a real app, you'd handle the file upload here and set the field value to the file path or ID.
+            // For now, we'll just store the name for display.
+            field.onChange(e.target.files[0].name);
+        }
+    };
+    
+    return (
+        <FormItem>
+            <FormLabel className="flex items-center gap-2">{label}</FormLabel>
+            <FormControl>
+                <div className="relative">
+                    <Input
+                        type="text"
+                        readOnly
+                        placeholder={fileName ? "" : "Click to upload a file (e.g., PDF, JPG)"}
+                        value={fileName || ""}
+                        className="cursor-pointer"
+                        onClick={() => document.getElementById(field.name)?.click()}
+                    />
+                    {fileName && <p className="text-sm p-2 text-foreground">{fileName}</p>}
+                    <FileUp className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+            </FormControl>
+             <Input
+                type="file"
+                id={field.name}
+                className="hidden"
+                onChange={handleFileChange}
+            />
+            <FormMessage />
+        </FormItem>
+    )
+}
+
 export default function SymptomChecker() {
   const [analysis, setAnalysis] = useState<DetailedAnalysisOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,7 +111,12 @@ export default function SymptomChecker() {
     setError(null);
     setAnalysis(null);
 
-    const result = await getDetailedAnalysis(data);
+    // We'll simulate that we're using the file data by passing the file names
+    const result = await getDetailedAnalysis({
+        ...data,
+        labReport: data.labReport ? `Uploaded file: ${data.labReport}` : undefined,
+        prescription: data.prescription ? `Uploaded file: ${data.prescription}` : undefined,
+    });
 
     if (result.success && result.data) {
       setAnalysis(result.data);
@@ -81,7 +127,7 @@ export default function SymptomChecker() {
   };
 
   return (
-    <div className="grid md:grid-cols-2 gap-8 items-start">
+    <div className="grid md:grid-cols-2 gap-4 items-start">
       <Card>
         <CardHeader>
           <CardTitle>Provide Health Data</CardTitle>
@@ -112,13 +158,7 @@ export default function SymptomChecker() {
                 control={form.control}
                 name="labReport"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2"><FileText /> Lab Report Details</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Copy and paste relevant parts of your lab report. e.g., 'Blood sugar: 150 mg/dL, Cholesterol: 220 mg/dL'" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                   <FileInput field={field} label={<><FileText /> Lab Report Details</>}/>
                 )}
               />
 
@@ -126,13 +166,7 @@ export default function SymptomChecker() {
                 control={form.control}
                 name="prescription"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2"><Pill/> Current Medications</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="List your current medications and dosages. e.g., 'Metformin 500mg daily'" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FileInput field={field} label={<><Pill/> Current Medications</>}/>
                 )}
               />
 
@@ -268,3 +302,5 @@ export default function SymptomChecker() {
     </div>
   );
 }
+
+    

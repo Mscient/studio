@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -15,11 +16,11 @@ const DetailedAnalysisInputSchema = z.object({
   symptoms: z
     .string()
     .describe('A description of the symptoms the patient is experiencing.'),
-  labReport: z.string().optional().describe('Text content from a lab report.'),
+  labReport: z.string().optional().describe('Text content or file reference from a lab report.'),
   prescription: z
     .string()
     .optional()
-    .describe('A list of current medications and dosages.'),
+    .describe('A list of current medications and dosages, or a file reference.'),
   treatmentHistory: z
     .string()
     .optional()
@@ -66,7 +67,7 @@ const detailedAnalysisPrompt = ai.definePrompt({
   output: {schema: DetailedAnalysisOutputSchema},
   prompt: `You are an advanced AI medical assistant. Your task is to provide a detailed health analysis based on a comprehensive set of patient data.
 
-  Analyze the following information:
+  Analyze the following information. Some fields may contain text, while others may reference an uploaded file.
   - Current Symptoms: {{symptoms}}
   {{#if labReport}}- Lab Report Data: {{labReport}}{{/if}}
   {{#if prescription}}- Current Medications: {{prescription}}{{/if}}
@@ -96,3 +97,5 @@ const detailedAnalysisFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    
