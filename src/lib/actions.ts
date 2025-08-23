@@ -1,6 +1,7 @@
 "use server";
 
 import { symptomAnalysis, SymptomAnalysisInput } from "@/ai/flows/symptom-analysis";
+import { detailedAnalysis, DetailedAnalysisInput } from "@/ai/flows/detailed-analysis";
 
 export async function getSymptomAnalysis(input: SymptomAnalysisInput) {
   try {
@@ -10,5 +11,16 @@ export async function getSymptomAnalysis(input: SymptomAnalysisInput) {
     console.error(e);
     const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred.";
     return { success: false, error: `Symptom analysis failed: ${errorMessage}` };
+  }
+}
+
+export async function getDetailedAnalysis(input: DetailedAnalysisInput) {
+  try {
+    const output = await detailedAnalysis(input);
+    return { success: true, data: output };
+  } catch (e) {
+    console.error(e);
+    const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred.";
+    return { success: false, error: `Detailed analysis failed: ${errorMessage}` };
   }
 }

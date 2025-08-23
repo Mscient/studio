@@ -5,10 +5,9 @@ import { AppLayout } from "@/components/app-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode } from "lucide-react";
+import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode, BrainCircuit } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bot } from "lucide-react";
 import QRCode from "qrcode.react";
 import { useEffect, useState } from "react";
 
@@ -54,9 +53,9 @@ export default function PatientDashboard() {
                 <Video className="w-8 h-8 text-primary" />
                 <span className="text-center text-sm font-medium">Consult Online</span>
               </Link>
-              <Link href="/patient/symptom-checker" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
-                <Bot className="w-8 h-8 text-primary" />
-                <span className="text-center text-sm font-medium">AI Symptom Check</span>
+              <Link href="/patient/detailed-analysis" className="flex flex-col items-center justify-center space-y-2 p-4 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+                <BrainCircuit className="w-8 h-8 text-primary" />
+                <span className="text-center text-sm font-medium">AI Detailed Analysis</span>
               </Link>
             </CardContent>
           </Card>
