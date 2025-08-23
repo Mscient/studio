@@ -5,6 +5,7 @@ import { AppLayout } from "@/components/app-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode, BrainCircuit, Pill, Building } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,17 +22,16 @@ export default function PatientDashboard() {
   const [greeting, setGreeting] = useState('Welcome back!');
   const [profileUrl, setProfileUrl] = useState('');
 
+  const generateProfileUrl = () => {
+    if (user) {
+      const timestamp = new Date().getTime();
+      const url = `${window.location.origin}/patient/profile/${user.uid}?ts=${timestamp}`;
+      setProfileUrl(url);
+    }
+  }
+
   useEffect(() => {
     if (user) {
-      const generateProfileUrl = () => {
-        const timestamp = new Date().getTime();
-        const url = `${window.location.origin}/patient/profile/${user.uid}?ts=${timestamp}`;
-        setProfileUrl(url);
-      }
-      
-      generateProfileUrl();
-      const intervalId = setInterval(generateProfileUrl, 30000); // Generate new QR every 30 seconds
-
       const fetchUserData = async () => {
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
@@ -42,8 +42,6 @@ export default function PatientDashboard() {
         }
       };
       fetchUserData();
-
-      return () => clearInterval(intervalId); // Cleanup interval on component unmount
     }
   }, [user]);
 
@@ -142,18 +140,32 @@ export default function PatientDashboard() {
                 <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit">
                     <QrCode className="w-8 h-8 text-primary" />
                 </div>
-                <CardTitle className="mt-2">My QR Code</CardTitle>
-                <CardDescription>This code is valid for 2 minutes. Show it to your doctor to share your profile.</CardDescription>
+                <CardTitle className="mt-2">Share Your Profile</CardTitle>
+                <CardDescription>Generate a secure, time-sensitive QR code to share with your doctor.</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center gap-4">
-                {profileUrl ? (
-                    <div className="p-4 bg-white rounded-lg border shadow-sm">
-                        <QRCode value={profileUrl} size={192} />
+            <CardContent>
+                <Dialog onOpenChange={(open) => { if (open) { generateProfileUrl() } else { setProfileUrl('') }}}>
+                  <DialogTrigger asChild>
+                     <Button size="lg">Show My QR Code</Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-xs">
+                    <DialogHeader>
+                      <DialogTitle className="text-center">{userName}</DialogTitle>
+                      <DialogDescription className="text-center">
+                         This code is valid for 2 minutes. Show it to your doctor to share your profile.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center justify-center gap-4 py-4">
+                        {profileUrl ? (
+                            <div className="p-4 bg-white rounded-lg border shadow-sm">
+                                <QRCode value={profileUrl} size={220} />
+                            </div>
+                        ) : (
+                            <div className="w-56 h-56 bg-muted rounded-lg animate-pulse" />
+                        )}
                     </div>
-                ) : (
-                    <div className="w-48 h-48 bg-muted rounded-lg animate-pulse" />
-                )}
-                {userName && <p className="font-semibold text-lg">{userName}</p>}
+                  </DialogContent>
+                </Dialog>
             </CardContent>
           </Card>
 
@@ -192,5 +204,3 @@ export default function PatientDashboard() {
     </AppLayout>
   );
 }
-
-    
