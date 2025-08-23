@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AppLogo } from "./app-logo";
 
 type NavItem = {
   href: string;
@@ -104,18 +105,7 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
               href="/"
               className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
             >
-             <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-5 w-5 transition-all group-hover:scale-110"
-              >
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-              </svg>
+             <AppLogo className="h-5 w-5 transition-all group-hover:scale-110" />
               <span className="sr-only">HealthVision</span>
             </Link>
         </div>
@@ -159,7 +149,7 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
         </nav>
       </aside>
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:justify-end sm:border-0 sm:bg-transparent sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:justify-between sm:border-0 sm:bg-transparent sm:px-6">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button size="icon" variant="outline" className="sm:hidden">
@@ -173,24 +163,19 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
                     href="/"
                     className="flex items-center gap-2 font-semibold"
                 >
-                     <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-6 w-6 text-primary"
-                      >
-                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                      </svg>
-                  <span>HealthVision</span>
+                    <AppLogo className="h-6 w-6 text-primary" />
+                    <span>HealthVision</span>
                 </Link>
               </div>
               <NavContent isMobile={true} />
             </SheetContent>
           </Sheet>
+
+          <div className="hidden items-center gap-2 sm:flex">
+            <AppLogo className="h-7 w-7 text-primary" />
+            <h1 className="text-xl font-semibold text-primary">HealthVision</h1>
+          </div>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
