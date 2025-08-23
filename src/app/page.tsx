@@ -50,8 +50,8 @@ export default function Home() {
           <TabsContent value="login">
             <div 
               className="absolute inset-0 bg-cover bg-center opacity-10" 
-              style={{ backgroundImage: 'url(https://placehold.co/450x550.png?text=)' }} 
-              data-ai-hint="medical background"
+              style={{ backgroundImage: 'url(https://placehold.co/450x550.png)' }} 
+              data-ai-hint="abstract medical"
             ></div>
             <form onSubmit={handleLogin}>
               <CardContent className="space-y-4 relative z-10">
@@ -97,8 +97,8 @@ export default function Home() {
           <TabsContent value="register">
              <div 
               className="absolute inset-0 bg-cover bg-center opacity-10" 
-              style={{ backgroundImage: 'url(https://placehold.co/600x700.png?text=)' }}
-              data-ai-hint="healthcare technology"
+              style={{ backgroundImage: 'url(https://placehold.co/600x700.png)' }}
+              data-ai-hint="digital health"
             ></div>
              <form onSubmit={handleLogin}>
               <CardContent className="space-y-4 relative z-10">

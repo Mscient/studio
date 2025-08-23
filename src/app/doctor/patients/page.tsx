@@ -10,12 +10,12 @@ import { Search, UserPlus } from "lucide-react";
 import Link from "next/link";
 
 const patients = [
-  { id: "pat_1", name: "Liam Johnson", age: 34, lastVisit: "2024-07-29", status: "Active", profileId: "liam-johnson-1", avatarHint: "man portrait" },
-  { id: "pat_2", name: "Olivia Smith", age: 28, lastVisit: "2024-07-29", status: "Active", profileId: "olivia-smith-2", avatarHint: "woman portrait" },
-  { id: "pat_3", name: "Noah Williams", age: 45, lastVisit: "2024-07-20", status: "Active", profileId: "noah-williams-3", avatarHint: "man portrait" },
-  { id: "pat_4", name: "Emma Brown", age: 31, lastVisit: "2024-06-15", status: "Follow-up", profileId: "emma-brown-4", avatarHint: "woman portrait" },
-  { id: "pat_5", name: "James Wilson", age: 52, lastVisit: "2024-05-01", status: "Stable", profileId: "james-wilson-5", avatarHint: "man portrait" },
-  { id: "pat_6", name: "Ava Taylor", age: 22, lastVisit: "2023-12-10", status: "Inactive", profileId: "ava-taylor-6", avatarHint: "woman portrait" },
+  { id: "pat_1", name: "Liam Johnson", age: 34, lastVisit: "2024-07-29", status: "Active", profileId: "liam-johnson-1", avatarHint: "caucasian man" },
+  { id: "pat_2", name: "Olivia Smith", age: 28, lastVisit: "2024-07-29", status: "Active", profileId: "olivia-smith-2", avatarHint: "hispanic woman" },
+  { id: "pat_3", name: "Noah Williams", age: 45, lastVisit: "2024-07-20", status: "Active", profileId: "noah-williams-3", avatarHint: "black man" },
+  { id: "pat_4", name: "Emma Brown", age: 31, lastVisit: "2024-06-15", status: "Follow-up", profileId: "emma-brown-4", avatarHint: "caucasian woman" },
+  { id: "pat_5", name: "James Wilson", age: 52, lastVisit: "2024-05-01", status: "Stable", profileId: "james-wilson-5", avatarHint: "asian man" },
+  { id: "pat_6", name: "Ava Taylor", age: 22, lastVisit: "2023-12-10", status: "Inactive", profileId: "ava-taylor-6", avatarHint: "black woman" },
 ];
 
 export default function PatientsPage() {

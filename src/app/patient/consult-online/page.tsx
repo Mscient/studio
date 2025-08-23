@@ -11,10 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Star, Video, Loader2 } from "lucide-react";
 
 const doctors = [
-    { name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, status: "Online", experience: "15 years", isCurrent: true, avatarHint: "woman doctor" },
-    { name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, status: "Online", experience: "10 years", isCurrent: false, avatarHint: "man doctor" },
-    { name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, status: "Offline", experience: "12 years", isCurrent: false, avatarHint: "woman doctor" },
-    { name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, status: "Online", experience: "20 years", isCurrent: false, avatarHint: "man doctor" },
+    { name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, status: "Online", experience: "15 years", isCurrent: true, avatarHint: "professional woman" },
+    { name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, status: "Online", experience: "10 years", isCurrent: false, avatarHint: "professional man" },
+    { name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, status: "Offline", experience: "12 years", isCurrent: false, avatarHint: "asian woman" },
+    { name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, status: "Online", experience: "20 years", isCurrent: false, avatarHint: "black man" },
 ];
 
 // Sort doctors to show the current one first, then by online status

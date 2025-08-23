@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, BrainCircuit, Briefcase, Calendar, FileText, HeartPulse, Lightbulb, Sparkles, TriangleAlert, User } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 // Mock data fetching, in a real app this would come from an API
 const getAppointmentDetails = (appointmentId: string) => {
@@ -69,6 +70,9 @@ const UrgencyMap = {
 
 export default function AppointmentDetailsPage({ params }: { params: { appointmentId: string } }) {
   const { patient, appointment, aiAnalysis } = getAppointmentDetails(params.appointmentId);
+  const routerParams = useParams();
+  const appointmentId = typeof routerParams.appointmentId === 'string' ? routerParams.appointmentId : '';
+
 
   return (
     <AppLayout userType="doctor">
@@ -94,7 +98,7 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
                     <Card>
                         <CardHeader className="items-center p-4">
                              <Avatar className="w-20 h-20 border-4 border-primary">
-                                <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="patient portrait"/>
+                                <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="man portrait"/>
                                 <AvatarFallback>{patient.name.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
                             </Avatar>
                         </CardHeader>
@@ -102,7 +106,7 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
                             <h3 className="text-lg font-bold">{patient.name}</h3>
                             <p className="text-muted-foreground text-sm">Age: {patient.age}</p>
                             <Button variant="outline" size="sm" className="mt-3" asChild>
-                                <Link href={`/patient/profile/${params.appointmentId}`}>View Full Profile</Link>
+                                <Link href={`/patient/profile/${appointmentId}`}>View Full Profile</Link>
                             </Button>
                         </CardContent>
                     </Card>

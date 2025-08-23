@@ -192,8 +192,8 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
                 className="overflow-hidden rounded-full"
               >
                 <Avatar>
-                  <AvatarImage src={`https://placehold.co/32x32.png`} data-ai-hint={userType === 'patient' ? 'man portrait' : 'woman doctor'} alt="User Avatar" />
-                  <AvatarFallback>{userType === 'patient' ? 'PA' : 'DR'}</AvatarFallback>
+                  <AvatarImage src={`https://placehold.co/32x32.png`} data-ai-hint={userType === 'patient' ? 'happy man' : 'happy woman'} alt="User Avatar" />
+                  <AvatarFallback>{userType === 'patient' ? 'AM' : 'DC'}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>

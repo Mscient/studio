@@ -18,7 +18,7 @@ const getPatientData = (userId: string) => {
         bloodType: "O+",
         allergies: ["Peanuts", "Pollen"],
         conditions: ["Hypertension", "Asthma"],
-        avatarHint: "man portrait"
+        avatarHint: "caucasian man"
     }
 }
 

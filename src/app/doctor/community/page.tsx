@@ -17,9 +17,9 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
 const myGroups = [
-  { id: 1, name: "Cardiology Case Studies", members: 45, description: "Discussing complex cardiology cases." },
-  { id: 2, name: "AI in Medicine Innovators", members: 120, description: "Exploring the frontier of AI in healthcare." },
-  { id: 3, name: "Pediatric Peer Support", members: 78, description: "A group for pediatric specialists." },
+  { id: 1, name: "Cardiology Case Studies", members: 45, description: "Discussing complex cardiology cases.", avatarHint: "heartbeat logo" },
+  { id: 2, name: "AI in Medicine Innovators", members: 120, description: "Exploring the frontier of AI in healthcare.", avatarHint: "brain circuit" },
+  { id: 3, name: "Pediatric Peer Support", members: 78, description: "A group for pediatric specialists.", avatarHint: "teddy bear" },
 ];
 
 export default function CommunityPage() {
@@ -57,7 +57,7 @@ export default function CommunityPage() {
       setLoadingTrends(false);
     };
     fetchData();
-  }, []);
+  }, [toast]);
 
   return (
     <AppLayout userType="doctor">
@@ -90,7 +90,7 @@ export default function CommunityPage() {
                             <CardHeader className="border-b">
                                 <div className="flex items-start gap-3">
                                     <Avatar>
-                                        <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="research institute logo"/>
+                                        <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="research logo"/>
                                         <AvatarFallback>AI</AvatarFallback>
                                     </Avatar>
                                     <div className="w-full">
@@ -164,7 +164,7 @@ export default function CommunityPage() {
                              <Link key={group.id} href={`/doctor/community/groups/${group.id}`} className="block">
                                 <div className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
                                     <Avatar className='h-10 w-10'>
-                                        <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="medical group"/>
+                                        <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint={group.avatarHint}/>
                                         <AvatarFallback><Users/></AvatarFallback>
                                     </Avatar>
                                     <div>

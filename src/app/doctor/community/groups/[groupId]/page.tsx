@@ -20,14 +20,14 @@ const getGroupDetails = (groupId: string) => {
         '2': { name: "AI in Medicine Innovators", members: 120, description: "Exploring the frontier of AI in healthcare.", avatarHint: "brain circuit" },
         '3': { name: "Pediatric Peer Support", members: 78, description: "A group for pediatric specialists.", avatarHint: "teddy bear" },
     }
-    return groups[groupId] || { name: "Unknown Group", members: 0, description: "" };
+    return groups[groupId] || { name: "Unknown Group", members: 0, description: "", avatarHint: "medical cross" };
 };
 
 const messages = [
     { id: 1, sender: "Dr. Anya Sharma", content: "Has anyone seen the latest trial data on the new SGLT2 inhibitor for heart failure? The results look promising.", timestamp: "10:30 AM", isMe: false, avatarHint: "woman doctor" },
     { id: 2, sender: "You", content: "I read the abstract. It seems particularly effective for patients with preserved ejection fraction. I've attached the full paper.", timestamp: "10:32 AM", isMe: true, avatarHint: "man doctor" },
-    { id: 3, sender: "Dr. Ben Carter", content: "Thanks for sharing! This could be a game-changer. I have a patient who might be a good candidate. I'm concerned about the risk of euglycemic DKA though.", timestamp: "10:35 AM", isMe: false, avatarHint: "man doctor" },
-    { id: 4, sender: "Dr. Anya Sharma", content: "Good point, Ben. The risk is low but non-trivial. We need to be vigilant about patient education on this.", timestamp: "10:36 AM", isMe: false, avatarHint: "woman doctor" },
+    { id: 3, sender: "Dr. Ben Carter", content: "Thanks for sharing! This could be a game-changer. I have a patient who might be a good candidate. I'm concerned about the risk of euglycemic DKA though.", timestamp: "10:35 AM", isMe: false, avatarHint: "male doctor" },
+    { id: 4, sender: "Dr. Anya Sharma", content: "Good point, Ben. The risk is low but non-trivial. We need to be vigilant about patient education on this.", timestamp: "10:36 AM", isMe: false, avatarHint: "female doctor" },
 ];
 
 
