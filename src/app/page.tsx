@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Stethoscope, User, Mail, Lock, Building, Phone, Calendar, ChevronsRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -12,15 +12,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLogo } from '@/components/app-logo';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 export default function Home() {
   const router = useRouter();
   const { toast } = useToast();
   const [role, setRole] = useState('patient');
   const [loading, setLoading] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleAuth = async (event: React.FormEvent, isRegister: boolean) => {
     event.preventDefault();
@@ -60,9 +68,11 @@ export default function Home() {
 
       } else {
         // Login
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+        const userRole = userDoc.exists() ? userDoc.data().role : 'patient';
         toast({ title: "Login Successful" });
-        router.push(selectedRole === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
+        router.push(userRole === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
       }
     } catch (error: any) {
       toast({
@@ -74,6 +84,60 @@ export default function Home() {
         setLoading(false);
     }
   };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        let userRole = 'patient';
+
+        if (!userDocSnap.exists()) {
+            // New user, create a document for them
+            await setDoc(userDocRef, {
+                uid: user.uid,
+                name: user.displayName,
+                email: user.email,
+                role: role,
+                createdAt: new Date(),
+            });
+            userRole = role;
+        } else {
+            // Existing user
+            userRole = userDocSnap.data().role;
+        }
+
+        toast({ title: "Google Sign-In Successful" });
+        router.push(userRole === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
+
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Google Sign-In Failed",
+            description: error.message,
+        });
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  if (showSplash) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-background">
+          <div className="flex items-center gap-2 mb-2 animate-pulse">
+            <AppLogo className="h-12 w-12 text-primary" />
+            <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-primary">
+              HealthVision
+            </h1>
+          </div>
+      </main>
+    )
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8">
@@ -103,26 +167,6 @@ export default function Home() {
             ></div>
             <form onSubmit={(e) => handleAuth(e, false)}>
               <CardContent className="space-y-4 relative z-10">
-                <div className="space-y-2">
-                  <Label htmlFor="role-login">I am a</Label>
-                  <Select name="role" value={role} onValueChange={setRole}>
-                    <SelectTrigger id="role-login" className="w-full">
-                      <SelectValue placeholder="Select your role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="patient">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" /> Patient
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="doctor">
-                         <div className="flex items-center gap-2">
-                          <Stethoscope className="h-4 w-4" /> Doctor
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input name="email" id="email-login" type="email" placeholder="email@example.com" className="pl-10" required />
@@ -135,9 +179,8 @@ export default function Home() {
                   {loading ? 'Logging in...' : 'Login'} <ChevronsRight className="ml-2 h-4 w-4" />
                 </Button>
                  <p className="text-center text-sm text-muted-foreground">Or continue with</p>
-                <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" type="button">Google</Button>
-                    <Button variant="outline" type="button">Phone</Button>
+                <div className="grid grid-cols-1 gap-4">
+                    <Button variant="outline" type="button" onClick={handleGoogleSignIn} disabled={loading}>Google</Button>
                 </div>
               </CardContent>
             </form>
@@ -210,6 +253,10 @@ export default function Home() {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Registering...' : 'Register'} <ChevronsRight className="ml-2 h-4 w-4" />
                 </Button>
+                 <p className="text-center text-sm text-muted-foreground">Or continue with</p>
+                <div className="grid grid-cols-1 gap-4">
+                    <Button variant="outline" type="button" onClick={handleGoogleSignIn} disabled={loading}>Google</Button>
+                </div>
               </CardContent>
             </form>
           </TabsContent>
