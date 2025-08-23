@@ -20,6 +20,7 @@ import {
   Video,
   QrCode,
   FilePlus,
+  MessageSquare,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,7 @@ const doctorNavItems: NavItem[] = [
   { href: "/doctor/patients", icon: Users, label: "My Patients" },
   { href: "/doctor/write-prescription", icon: FilePlus, label: "Write Prescription" },
   { href: "/doctor/scan-qr", icon: QrCode, label: "Scan Patient QR" },
+  { href: "/doctor/community", icon: MessageSquare, label: "Community" },
 ];
 
 export function AppLayout({ children, userType }: AppLayoutProps) {
