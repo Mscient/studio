@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, CheckCircle, Clock, Video, XCircle } from "lucide-react";
+import { Calendar, CheckCircle, Clock, Video, XCircle, Bell } from "lucide-react";
 
 const upcomingAppointments = [
   { id: "apt_1", doctor: "Dr. Emily Carter", specialty: "Cardiology", date: "2024-08-15", time: "10:00 AM", type: "Video", status: "Confirmed" },
@@ -28,6 +28,32 @@ export default function AppointmentsPage() {
       description: message,
     });
   };
+
+  const handleSetReminder = (doctorName: string, dateTime: string) => {
+    if (!("Notification" in window)) {
+      toast({
+        variant: "destructive",
+        title: "Notifications not supported",
+        description: "This browser does not support desktop notification.",
+      });
+      return;
+    }
+
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        toast({
+          title: "Reminder Set!",
+          description: `You'll be reminded for your appointment with ${doctorName} on ${dateTime}.`,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Notifications Blocked",
+          description: "Please enable notifications in your browser settings to set reminders.",
+        });
+      }
+    });
+  }
 
   return (
     <AppLayout userType="patient">
@@ -71,6 +97,9 @@ export default function AppointmentsPage() {
                                 </div>
                                 <div className="flex gap-2">
                                     <Button onClick={() => handleAction('Joining video call...')}>Join Video Call</Button>
+                                    <Button variant="outline" onClick={() => handleSetReminder(apt.doctor, `${apt.date} at ${apt.time}`)}>
+                                        <Bell className="mr-2"/> Set Reminder
+                                    </Button>
                                     <Button variant="outline" onClick={() => handleAction('Reschedule request sent.')}>Reschedule</Button>
                                      <Button variant="destructive" onClick={() => handleAction('Appointment cancelled.')}>Cancel</Button>
                                 </div>

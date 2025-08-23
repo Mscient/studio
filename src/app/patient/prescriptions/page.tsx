@@ -1,4 +1,6 @@
 
+'use client';
+
 import { AppLayout } from "@/components/app-layout";
 import {
   Card,
@@ -15,7 +17,9 @@ import {
 } from "@/components/ui/accordion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Stethoscope, User, Calendar, Pill, Clock, ShieldCheck, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { FileText, Stethoscope, User, Calendar, Pill, Clock, ShieldCheck, Info, Bell } from "lucide-react";
 
 const prescriptions = [
   {
@@ -103,6 +107,36 @@ const prescriptions = [
 ];
 
 export default function PrescriptionsPage() {
+  const { toast } = useToast();
+
+  const handleSetReminder = (medicineName: string) => {
+    if (!("Notification" in window)) {
+      toast({
+        variant: "destructive",
+        title: "Notifications not supported",
+        description: "This browser does not support desktop notifications.",
+      });
+      return;
+    }
+
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        // In a real app, you would use a service worker to schedule the notification.
+        // For this demo, we'll just show a confirmation toast.
+        toast({
+          title: "Reminder Set",
+          description: `You will be reminded to take ${medicineName}.`,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Notifications Blocked",
+          description: "Please enable notifications in your browser settings.",
+        });
+      }
+    });
+  };
+
   return (
     <AppLayout userType="patient">
       <div className="flex flex-col gap-8">
@@ -156,7 +190,12 @@ export default function PrescriptionsPage() {
                       <div className="space-y-4 pt-2">
                         {prescription.medicines.map((med) => (
                           <div key={med.name} className="p-4 rounded-lg border bg-background/50 space-y-3">
-                             <p className="font-bold text-lg text-primary">{med.name} <span className="text-sm font-normal text-muted-foreground">({med.brand})</span></p>
+                             <div className="flex justify-between items-start">
+                                <p className="font-bold text-lg text-primary">{med.name} <span className="text-sm font-normal text-muted-foreground">({med.brand})</span></p>
+                                <Button variant="outline" size="sm" onClick={() => handleSetReminder(med.name)}>
+                                    <Bell className="mr-2 h-4 w-4"/> Set Reminder
+                                </Button>
+                             </div>
                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                 <div className="flex items-center gap-2">
                                   <Pill className="w-4 h-4 text-primary" />
