@@ -23,7 +23,15 @@ export default function PatientDashboard() {
 
   useEffect(() => {
     if (user) {
-      setProfileUrl(`${window.location.origin}/patient/profile/${user.uid}`);
+      const generateProfileUrl = () => {
+        const timestamp = new Date().getTime();
+        const url = `${window.location.origin}/patient/profile/${user.uid}?ts=${timestamp}`;
+        setProfileUrl(url);
+      }
+      
+      generateProfileUrl();
+      const intervalId = setInterval(generateProfileUrl, 30000); // Generate new QR every 30 seconds
+
       const fetchUserData = async () => {
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
@@ -34,6 +42,8 @@ export default function PatientDashboard() {
         }
       };
       fetchUserData();
+
+      return () => clearInterval(intervalId); // Cleanup interval on component unmount
     }
   }, [user]);
 
@@ -133,7 +143,7 @@ export default function PatientDashboard() {
                     <QrCode className="w-8 h-8 text-primary" />
                 </div>
                 <CardTitle className="mt-2">My QR Code</CardTitle>
-                <CardDescription>Show this to your doctor to share your profile.</CardDescription>
+                <CardDescription>This code is valid for 2 minutes. Show it to your doctor to share your profile.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center gap-4">
                 {profileUrl ? (
@@ -182,3 +192,5 @@ export default function PatientDashboard() {
     </AppLayout>
   );
 }
+
+    

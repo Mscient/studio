@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import jsQR from "jsqr";
-import { Camera, QrCode, Upload } from "lucide-react";
+import { Camera, QrCode, Upload, TriangleAlert, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+
+const QR_CODE_EXPIRATION_MS = 2 * 60 * 1000; // 2 minutes
 
 export default function ScanQrPage() {
   const router = useRouter();
@@ -19,6 +21,33 @@ export default function ScanQrPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState(true);
   const [scannedUrl, setScannedUrl] = useState<string | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [scanSuccess, setScanSuccess] = useState<string | null>(null);
+
+  const validateAndRedirect = (url: string) => {
+    try {
+      const urlObject = new URL(url);
+      const timestampStr = urlObject.searchParams.get('ts');
+
+      if (urlObject.pathname.includes('/patient/profile/') && timestampStr) {
+        const timestamp = parseInt(timestampStr, 10);
+        const now = new Date().getTime();
+
+        if (now - timestamp > QR_CODE_EXPIRATION_MS) {
+           setScanError("Expired QR Code. Please ask the patient for a new one.");
+           return;
+        }
+
+        setScanSuccess("QR Code Valid! Redirecting...");
+        router.push(urlObject.pathname);
+
+      } else {
+        setScanError("Invalid HealthVision QR Code. Please scan a valid code.");
+      }
+    } catch (e) {
+      setScanError("Not a valid URL. Please scan a valid HealthVision QR code.");
+    }
+  }
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -44,9 +73,14 @@ export default function ScanQrPage() {
     };
 
     const scanQRCode = () => {
+        if (scannedUrl || scanError) {
+             if (stream) stream.getTracks().forEach(track => track.stop());
+             cancelAnimationFrame(animationFrameId);
+             return;
+        }
         if (videoRef.current && canvasRef.current) {
             const video = videoRef.current;
-            const canvas = canvasRef.current;
+            const canvas = canvas.current;
             const context = canvas.getContext('2d');
 
             if (context && video.readyState === video.HAVE_ENOUGH_DATA) {
@@ -60,10 +94,7 @@ export default function ScanQrPage() {
 
                 if (code) {
                     setScannedUrl(code.data);
-                    if (stream) {
-                        stream.getTracks().forEach(track => track.stop());
-                    }
-                    router.push(new URL(code.data).pathname);
+                    validateAndRedirect(code.data);
                 }
             }
         }
@@ -80,11 +111,14 @@ export default function ScanQrPage() {
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scannedUrl, scanError]);
 
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    setScanError(null);
+    setScanSuccess(null);
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -101,7 +135,7 @@ export default function ScanQrPage() {
               const code = jsQR(imageData.data, imageData.width, imageData.height);
               if (code) {
                 setScannedUrl(code.data);
-                router.push(new URL(code.data).pathname);
+                validateAndRedirect(code.data);
               } else {
                 toast({
                   variant: 'destructive',
@@ -139,13 +173,29 @@ export default function ScanQrPage() {
           <CardContent className="p-6">
             <div className="relative w-full aspect-video bg-muted rounded-md overflow-hidden flex items-center justify-center">
               <video ref={videoRef} className="w-full h-full object-cover" autoPlay playsInline muted />
-              {!hasCameraPermission && (
-                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white p-4">
-                      <Camera className="w-12 h-12 mb-4" />
-                      <p className="text-lg font-semibold">Camera Access Denied</p>
-                      <p className="text-center text-sm">Please enable camera permissions in your browser settings to use the scanner.</p>
-                  </div>
-              )}
+              <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white p-4 z-10">
+                 {!hasCameraPermission && (
+                      <>
+                          <Camera className="w-12 h-12 mb-4" />
+                          <p className="text-lg font-semibold">Camera Access Denied</p>
+                          <p className="text-center text-sm">Please enable camera permissions in your browser settings.</p>
+                      </>
+                  )}
+                  {scanError && (
+                     <div className="text-center">
+                        <TriangleAlert className="w-12 h-12 mb-4 text-destructive mx-auto"/>
+                        <p className="text-lg font-semibold text-destructive">Scan Failed</p>
+                        <p className="text-center text-sm">{scanError}</p>
+                     </div>
+                  )}
+                   {scanSuccess && (
+                     <div className="text-center">
+                        <CheckCircle className="w-12 h-12 mb-4 text-green-400 mx-auto"/>
+                        <p className="text-lg font-semibold text-green-400">Scan Successful</p>
+                        <p className="text-center text-sm">{scanSuccess}</p>
+                     </div>
+                  )}
+              </div>
             </div>
             <canvas ref={canvasRef} style={{ display: 'none' }} />
             
@@ -168,3 +218,5 @@ export default function ScanQrPage() {
     </AppLayout>
   );
 }
+
+    
