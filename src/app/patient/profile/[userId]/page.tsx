@@ -18,6 +18,7 @@ const getPatientData = (userId: string) => {
         bloodType: "O+",
         allergies: ["Peanuts", "Pollen"],
         conditions: ["Hypertension", "Asthma"],
+        avatarHint: "man portrait"
     }
 }
 
@@ -29,10 +30,10 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
     <AppLayout userType="patient">
        <div className="w-full max-w-4xl mx-auto">
         <Card className="shadow-lg">
-            <CardHeader className="bg-card">
+            <CardHeader className="bg-card border-b">
                  <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
                     <Avatar className="w-20 h-20 border-4 border-primary">
-                        <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="patient portrait"/>
+                        <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint={patient.avatarHint}/>
                         <AvatarFallback>{patient.name.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
                     </Avatar>
                     <div>
@@ -44,10 +45,10 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
             <CardContent className="p-4 grid gap-4">
                 <div className="grid md:grid-cols-2 gap-4">
                     <Card>
-                        <CardHeader className="p-4">
+                        <CardHeader className="p-4 border-b">
                             <CardTitle className="flex items-center gap-2 text-lg"><User /> Personal Information</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3 p-4 pt-0">
+                        <CardContent className="space-y-3 p-4">
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Age</span>
                                 <span className="font-medium">{patient.age}</span>
@@ -65,10 +66,10 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
                         </CardContent>
                     </Card>
                      <Card>
-                        <CardHeader className="p-4">
+                        <CardHeader className="p-4 border-b">
                             <CardTitle className="flex items-center gap-2 text-lg"><Briefcase /> Medical Details</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3 text-sm p-4 pt-0">
+                        <CardContent className="space-y-3 text-sm p-4">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Blood Type</span>
                                 <span className="font-medium">{patient.bloodType}</span>

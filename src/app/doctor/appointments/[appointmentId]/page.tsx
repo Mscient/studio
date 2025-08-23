@@ -82,7 +82,7 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
             </div>
             
             <Card>
-                <CardHeader className="p-4">
+                <CardHeader className="p-4 border-b">
                     <CardTitle>{appointment.patientName}</CardTitle>
                     <CardDescription>{new Date(appointment.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {appointment.time}</CardDescription>
                     <p className="pt-2 text-sm text-muted-foreground"><strong>Reason:</strong> {appointment.reason}</p>
@@ -107,7 +107,7 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardHeader className="p-4">
+                        <CardHeader className="p-4 border-b">
                             <CardTitle className="flex items-center gap-2 text-lg"><Briefcase /> Medical Details</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 text-sm p-4">
@@ -134,7 +134,7 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
                 </div>
                 <div className="md:col-span-2 space-y-4">
                     <Card className="bg-accent/50 border-accent">
-                        <CardHeader className="p-4">
+                        <CardHeader className="p-4 border-b">
                             <CardTitle className="flex items-center gap-2">
                                 <BrainCircuit /> AI Pre-Analysis
                             </CardTitle>
@@ -155,10 +155,10 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
                                     </CardContent>
                                 </Card>
                                  <Card className="bg-background">
-                                    <CardHeader className="p-4">
+                                    <CardHeader className="p-4 border-b">
                                         <CardTitle className="text-base">Key Health Indicators</CardTitle>
                                     </CardHeader>
-                                    <CardContent className="grid grid-cols-2 gap-4 p-4 pt-0">
+                                    <CardContent className="grid grid-cols-2 gap-4 p-4">
                                         <div className="flex items-center gap-2">
                                             <div className="p-2 bg-primary/10 rounded-full"><FileText className="w-5 h-5 text-primary"/></div>
                                             <div>

@@ -11,10 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Star, Video, Loader2 } from "lucide-react";
 
 const doctors = [
-    { name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, status: "Online", experience: "15 years", isCurrent: true },
-    { name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, status: "Online", experience: "10 years", isCurrent: false },
-    { name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, status: "Offline", experience: "12 years", isCurrent: false },
-    { name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, status: "Online", experience: "20 years", isCurrent: false },
+    { name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, status: "Online", experience: "15 years", isCurrent: true, avatarHint: "woman doctor" },
+    { name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, status: "Online", experience: "10 years", isCurrent: false, avatarHint: "man doctor" },
+    { name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, status: "Offline", experience: "12 years", isCurrent: false, avatarHint: "woman doctor" },
+    { name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, status: "Online", experience: "20 years", isCurrent: false, avatarHint: "man doctor" },
 ];
 
 // Sort doctors to show the current one first, then by online status
@@ -46,7 +46,7 @@ export default function ConsultOnlinePage() {
     <AppLayout userType="patient">
       <div className="flex flex-col gap-4">
         <Card>
-            <CardHeader>
+            <CardHeader className="border-b">
             <CardTitle>Consult a Doctor Online</CardTitle>
             <CardDescription>Start an instant video consultation with available doctors.</CardDescription>
             </CardHeader>
@@ -56,8 +56,8 @@ export default function ConsultOnlinePage() {
                 <Card key={doctor.name} className={doctor.isCurrent ? "border-primary border-2" : ""}>
                     <CardHeader className="items-center text-center relative">
                         {doctor.isCurrent && <Badge className="absolute top-2 right-2">Your Doctor</Badge>}
-                        <Avatar className="w-24 h-24 mb-4">
-                            <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="doctor portrait"/>
+                        <Avatar className="w-24 h-24 mb-4 border">
+                            <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint={doctor.avatarHint}/>
                             <AvatarFallback>{doctor.name.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
                         </Avatar>
                         <CardTitle>{doctor.name}</CardTitle>

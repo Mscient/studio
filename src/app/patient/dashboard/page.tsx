@@ -26,7 +26,7 @@ export default function PatientDashboard() {
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <div className="xl:col-span-2 space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center">
+            <CardHeader className="flex flex-row items-center border-b">
               <div className="grid gap-2">
                 <CardTitle>Welcome back, Alex!</CardTitle>
                 <CardDescription>
@@ -37,10 +37,10 @@ export default function PatientDashboard() {
           </Card>
           
           <Card>
-            <CardHeader>
+            <CardHeader className="border-b">
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-2 p-4">
               <Link href="/patient/book-appointment" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <HeartPulse className="w-7 h-7 text-primary" />
                 <span className="text-center text-xs font-medium">Book Doctor</span>
@@ -62,10 +62,10 @@ export default function PatientDashboard() {
 
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="border-b">
                 <CardTitle className="flex items-center gap-2 text-xl"><FileText/> Recent Lab Reports</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-4">
                 <div className="flex items-center justify-between">
                   <div>
                       <p className="font-semibold">Annual Blood Panel</p>
@@ -87,10 +87,10 @@ export default function PatientDashboard() {
               </CardContent>
             </Card>
             <Card>
-              <CardHeader>
+              <CardHeader className="border-b">
                 <CardTitle className="flex items-center gap-2 text-xl"><Pill/> Current Medications</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-4">
                 <div className="flex items-center justify-between">
                   <div>
                       <p className="font-semibold">Metformin</p>
@@ -116,7 +116,7 @@ export default function PatientDashboard() {
 
         <div className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="border-b">
               <CardTitle className="flex items-center gap-2">
                 <QrCode />
                 Share Profile
@@ -136,13 +136,13 @@ export default function PatientDashboard() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between border-b">
               <CardTitle>Upcoming Appointments</CardTitle>
               <Link href="/patient/appointments">
                 <Button variant="outline" size="sm">View All</Button>
               </Link>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 p-4">
               <div className="flex items-center gap-4 p-3 rounded-lg bg-background">
                 <div className="p-2 bg-secondary rounded-md">
                   <Calendar className="w-5 h-5 text-secondary-foreground" />
@@ -167,12 +167,12 @@ export default function PatientDashboard() {
           </Card>
           
           <Card>
-            <CardHeader>
+            <CardHeader className="border-b">
               <CardTitle>Recent Doctors</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-3">
+            <CardContent className="grid gap-3 p-4">
               <div className="flex items-center gap-4">
-                <Image src="https://placehold.co/40x40.png" alt="Dr. Carter" width={40} height={40} className="rounded-full" data-ai-hint="doctor portrait"/>
+                <Image src="https://placehold.co/40x40.png" alt="Dr. Carter" width={40} height={40} className="rounded-full" data-ai-hint="woman doctor"/>
                 <div className="grid gap-1">
                   <p className="text-sm font-medium leading-none">
                     Dr. Emily Carter
@@ -188,7 +188,7 @@ export default function PatientDashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <Image src="https://placehold.co/40x40.png" alt="Dr. Hanson" width={40} height={40} className="rounded-full" data-ai-hint="doctor portrait"/>
+                <Image src="https://placehold.co/40x40.png" alt="Dr. Hanson" width={40} height={40} className="rounded-full" data-ai-hint="man doctor"/>
                 <div className="grid gap-1">
                   <p className="text-sm font-medium leading-none">
                     Dr. Ben Hanson

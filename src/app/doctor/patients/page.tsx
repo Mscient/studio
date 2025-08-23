@@ -10,19 +10,19 @@ import { Search, UserPlus } from "lucide-react";
 import Link from "next/link";
 
 const patients = [
-  { id: "pat_1", name: "Liam Johnson", age: 34, lastVisit: "2024-07-29", status: "Active", profileId: "liam-johnson-1" },
-  { id: "pat_2", name: "Olivia Smith", age: 28, lastVisit: "2024-07-29", status: "Active", profileId: "olivia-smith-2" },
-  { id: "pat_3", name: "Noah Williams", age: 45, lastVisit: "2024-07-20", status: "Active", profileId: "noah-williams-3" },
-  { id: "pat_4", name: "Emma Brown", age: 31, lastVisit: "2024-06-15", status: "Follow-up", profileId: "emma-brown-4" },
-  { id: "pat_5", name: "James Wilson", age: 52, lastVisit: "2024-05-01", status: "Stable", profileId: "james-wilson-5" },
-  { id: "pat_6", name: "Ava Taylor", age: 22, lastVisit: "2023-12-10", status: "Inactive", profileId: "ava-taylor-6" },
+  { id: "pat_1", name: "Liam Johnson", age: 34, lastVisit: "2024-07-29", status: "Active", profileId: "liam-johnson-1", avatarHint: "man portrait" },
+  { id: "pat_2", name: "Olivia Smith", age: 28, lastVisit: "2024-07-29", status: "Active", profileId: "olivia-smith-2", avatarHint: "woman portrait" },
+  { id: "pat_3", name: "Noah Williams", age: 45, lastVisit: "2024-07-20", status: "Active", profileId: "noah-williams-3", avatarHint: "man portrait" },
+  { id: "pat_4", name: "Emma Brown", age: 31, lastVisit: "2024-06-15", status: "Follow-up", profileId: "emma-brown-4", avatarHint: "woman portrait" },
+  { id: "pat_5", name: "James Wilson", age: 52, lastVisit: "2024-05-01", status: "Stable", profileId: "james-wilson-5", avatarHint: "man portrait" },
+  { id: "pat_6", name: "Ava Taylor", age: 22, lastVisit: "2023-12-10", status: "Inactive", profileId: "ava-taylor-6", avatarHint: "woman portrait" },
 ];
 
 export default function PatientsPage() {
   return (
     <AppLayout userType="doctor">
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b">
           <div className="flex items-center justify-between">
             <div>
                 <CardTitle>My Patients</CardTitle>
@@ -37,7 +37,7 @@ export default function PatientsPage() {
                 <Input placeholder="Search patients by name..." className="pl-10" />
             </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -54,7 +54,7 @@ export default function PatientsPage() {
                             <TableCell className="font-medium">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="w-9 h-9">
-                                        <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="patient portrait"/>
+                                        <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint={patient.avatarHint}/>
                                         <AvatarFallback>{patient.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                                     </Avatar>
                                     <span>{patient.name}</span>

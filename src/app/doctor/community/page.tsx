@@ -14,6 +14,7 @@ import type { DailyHealthTrend } from '@/ai/flows/daily-trends';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 const myGroups = [
   { id: 1, name: "Cardiology Case Studies", members: 45, description: "Discussing complex cardiology cases." },
@@ -26,6 +27,14 @@ export default function CommunityPage() {
   const [trends, setTrends] = useState<DailyHealthTrend[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingTrends, setLoadingTrends] = useState(true);
+  const { toast } = useToast();
+
+  const handleLike = (title: string) => {
+    toast({
+        title: "Liked!",
+        description: `You liked the post: "${title}"`,
+    });
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,7 +63,7 @@ export default function CommunityPage() {
     <AppLayout userType="doctor">
       <div className="flex flex-col gap-8">
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <CardTitle className="flex items-center gap-2">
               <MessageSquare />
               Medical Community Hub
@@ -78,7 +87,7 @@ export default function CommunityPage() {
                 ) : (
                     updates.map((post) => (
                         <Card key={post.title} className="overflow-hidden">
-                            <CardHeader>
+                            <CardHeader className="border-b">
                                 <div className="flex items-start gap-3">
                                     <Avatar>
                                         <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="research institute logo"/>
@@ -96,7 +105,7 @@ export default function CommunityPage() {
                                 {post.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
                                 </div>
                             </CardHeader>
-                            <CardContent className="space-y-6">
+                            <CardContent className="space-y-6 p-4">
                                 <p className="text-muted-foreground">{post.summary}</p>
                                 
                                 <div>
@@ -114,8 +123,8 @@ export default function CommunityPage() {
                                 </div>
 
                             </CardContent>
-                            <CardFooter className="bg-muted/50 p-2 flex justify-around">
-                                <Button variant="ghost" size="sm"><ThumbsUp className="mr-2"/> Like</Button>
+                            <CardFooter className="bg-muted/50 p-2 flex justify-around border-t">
+                                <Button variant="ghost" size="sm" onClick={() => handleLike(post.title)}><ThumbsUp className="mr-2"/> Like</Button>
                                 <Button variant="ghost" size="sm"><BrainCircuit className="mr-2"/> Discuss</Button>
                                 <Button variant="ghost" size="sm"><Share2 className="mr-2"/> Share</Button>
                             </CardFooter>
@@ -125,17 +134,17 @@ export default function CommunityPage() {
             </div>
             <div className="space-y-6">
                  <Card>
-                    <CardHeader>
+                    <CardHeader className="border-b">
                         <CardTitle className='flex items-center gap-2'><TrendingUp/> Daily Health Trends</CardTitle>
                     </CardHeader>
-                    <CardContent className='space-y-3'>
+                    <CardContent className='space-y-3 p-4'>
                        {loadingTrends ? (
                          <div className="flex justify-center items-center h-24">
                             <Loader2 className="w-6 h-6 animate-spin text-primary" />
                         </div>
                        ) : (
                          trends.map(trend => (
-                            <div key={trend.title} className="p-2 rounded-md hover:bg-accent/50">
+                            <div key={trend.title} className="p-2 rounded-md hover:bg-accent">
                                 <p className="font-semibold">{trend.title}</p>
                                 <p className="text-xs text-muted-foreground">{trend.summary}</p>
                             </div>
@@ -144,19 +153,20 @@ export default function CommunityPage() {
                     </CardContent>
                  </Card>
                  <Card>
-                    <CardHeader>
+                    <CardHeader className="border-b">
                         <CardTitle className='flex items-center justify-between'>
                             <span>My Groups</span>
                             <Button variant="ghost" size="icon"><PlusCircle className='w-5 h-5 text-muted-foreground'/></Button>
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className='space-y-1'>
+                    <CardContent className='space-y-1 p-2'>
                         {myGroups.map(group => (
                              <Link key={group.id} href={`/doctor/community/groups/${group.id}`} className="block">
-                                <div className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50">
-                                    <div className='p-2 bg-secondary rounded-md'>
-                                        <Users className='w-5 h-5 text-secondary-foreground'/>
-                                    </div>
+                                <div className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
+                                    <Avatar className='h-10 w-10'>
+                                        <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="medical group"/>
+                                        <AvatarFallback><Users/></AvatarFallback>
+                                    </Avatar>
                                     <div>
                                         <p className="font-semibold">{group.name}</p>
                                         <p className="text-xs text-muted-foreground">{group.members} members</p>
@@ -167,10 +177,10 @@ export default function CommunityPage() {
                     </CardContent>
                 </Card>
                  <Card>
-                    <CardHeader>
+                    <CardHeader className="border-b">
                         <CardTitle className='flex items-center gap-2'><Vote/> Create a Poll</CardTitle>
                     </CardHeader>
-                    <CardContent className='space-y-4'>
+                    <CardContent className='space-y-4 p-4'>
                         <div className='space-y-2'>
                             <Label htmlFor="poll-question">Poll Question</Label>
                             <Input id="poll-question" placeholder="e.g., What's the best approach for...?"/>

@@ -192,7 +192,7 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
                 className="overflow-hidden rounded-full"
               >
                 <Avatar>
-                  <AvatarImage src={`https://placehold.co/32x32.png`} alt="User Avatar" />
+                  <AvatarImage src={`https://placehold.co/32x32.png`} data-ai-hint={userType === 'patient' ? 'patient portrait' : 'doctor portrait'} alt="User Avatar" />
                   <AvatarFallback>{userType === 'patient' ? 'PA' : 'DR'}</AvatarFallback>
                 </Avatar>
               </Button>

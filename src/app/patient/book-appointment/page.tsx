@@ -9,10 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
 
 const doctors = [
-    { name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, experience: "15 years", fee: "$150" },
-    { name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, experience: "10 years", fee: "$120" },
-    { name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, experience: "12 years", fee: "$100" },
-    { name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, experience: "20 years", fee: "$200" },
+    { name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, experience: "15 years", fee: "$150", avatarHint: "woman doctor" },
+    { name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, experience: "10 years", fee: "$120", avatarHint: "man doctor" },
+    { name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, experience: "12 years", fee: "$100", avatarHint: "woman doctor" },
+    { name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, experience: "20 years", fee: "$200", avatarHint: "man doctor" },
 ];
 
 export default function BookAppointmentPage() {
@@ -29,7 +29,7 @@ export default function BookAppointmentPage() {
     <AppLayout userType="patient">
       <div className="flex flex-col gap-4">
         <Card>
-            <CardHeader>
+            <CardHeader className="border-b">
             <CardTitle>Book an Appointment</CardTitle>
             <CardDescription>Find and book appointments with our top-rated doctors.</CardDescription>
             </CardHeader>
@@ -38,8 +38,8 @@ export default function BookAppointmentPage() {
             {doctors.map(doctor => (
                 <Card key={doctor.name}>
                     <CardHeader className="items-center text-center">
-                        <Avatar className="w-24 h-24 mb-4">
-                            <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="doctor portrait"/>
+                        <Avatar className="w-24 h-24 mb-4 border">
+                            <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint={doctor.avatarHint}/>
                             <AvatarFallback>{doctor.name.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
                         </Avatar>
                         <CardTitle>{doctor.name}</CardTitle>
