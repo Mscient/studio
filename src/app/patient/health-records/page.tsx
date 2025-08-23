@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,48 +11,60 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FilePlus, History, Pill, FileText } from "lucide-react";
+import { FilePlus, History, Pill, FileText as FileTextIcon, Loader2 } from "lucide-react";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from '@/lib/firebase';
+import { collection, addDoc, query, getDocs, doc, setDoc, where } from "firebase/firestore";
 
-// Mock data
-const initialPrescriptions = [
-    { name: "Metformin 500mg", prescribedBy: "Dr. Carter", date: "01/15/2024" },
-    { name: "Lisinopril 20mg", prescribedBy: "Dr. Carter", date: "01/15/2024" },
-];
-
-const initialLabReports = [
-    { name: "Annual Blood Panel", facility: "General Hospital", date: "03/20/2024" },
-    { name: "Cholesterol Check", facility: "City Clinic", date: "11/05/2023" },
-];
-
-const initialTreatmentHistory = [
-    { name: "Appendectomy", facility: "St. Jude's Hospital", date: "07/10/2015" },
-];
+interface HealthRecord {
+    id: string;
+    name: string;
+    facility?: string;
+    prescribedBy?: string;
+    date: string;
+    type: 'prescription' | 'lab_report' | 'treatment_history';
+}
 
 export default function HealthRecordsPage() {
-  const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
-  const [labReports, setLabReports] = useState(initialLabReports);
-  const [treatmentHistory, setTreatmentHistory] = useState(initialTreatmentHistory);
-
+  const [records, setRecords] = useState<HealthRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [user] = useAuthState(auth);
   const { toast } = useToast();
 
-  const handleAddRecord = (event: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    const fetchRecords = async () => {
+      if (!user) return;
+      setLoading(true);
+      const q = query(collection(db, `users/${user.uid}/healthRecords`));
+      const querySnapshot = await getDocs(q);
+      const recordsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as HealthRecord));
+      setRecords(recordsData);
+      setLoading(false);
+    };
+
+    fetchRecords();
+  }, [user]);
+
+  const handleAddRecord = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!user) return;
+
     const formData = new FormData(event.currentTarget);
-    const type = formData.get('type') as string;
+    const type = formData.get('type') as HealthRecord['type'];
     const name = formData.get('name') as string;
     const facility = formData.get('facility') as string;
-    const date = new Date().toLocaleDateString('en-US'); // Using today's date for simplicity
+    const date = new Date().toISOString().split('T')[0];
 
-    const newRecord = { name, facility, prescribedBy: facility, date };
+    const newRecord = {
+      name,
+      date,
+      type,
+      ...(type === 'prescription' ? { prescribedBy: facility } : { facility }),
+    };
 
-    if (type === 'prescription') {
-        setPrescriptions(prev => [newRecord, ...prev]);
-    } else if (type === 'lab_report') {
-        setLabReports(prev => [newRecord, ...prev]);
-    } else if (type === 'treatment_history') {
-        setTreatmentHistory(prev => [newRecord, ...prev]);
-    }
+    const docRef = await addDoc(collection(db, `users/${user.uid}/healthRecords`), newRecord);
+    setRecords(prev => [{ id: docRef.id, ...newRecord } as HealthRecord, ...prev]);
 
     toast({
       title: "Record Added",
@@ -60,6 +72,27 @@ export default function HealthRecordsPage() {
     });
     setIsDialogOpen(false);
   };
+
+  const renderList = (type: HealthRecord['type']) => {
+      const filteredRecords = records.filter(r => r.type === type);
+      return (
+        <div className="space-y-4">
+            {filteredRecords.length > 0 ? (
+                filteredRecords.map((item, index) => (
+                    <div key={item.id} className="flex justify-between items-start">
+                    <div>
+                        <p className="font-semibold">{item.name}</p>
+                        <p className="text-sm text-muted-foreground">{item.type === 'prescription' ? `Prescribed by ${item.prescribedBy}`: `At ${item.facility}`}</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{new Date(item.date).toLocaleDateString()}</p>
+                    </div>
+                ))
+            ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">No records found.</p>
+            )}
+        </div>
+      );
+  }
 
   return (
     <AppLayout userType="patient">
@@ -124,67 +157,37 @@ export default function HealthRecordsPage() {
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-3 gap-6">
-           <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-lg font-medium flex items-center gap-2"><Pill /> Prescriptions</CardTitle>
-                 <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(true)}><FilePlus className="w-5 h-5 text-muted-foreground" /></Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {prescriptions.map((item, index) => (
-                    <div key={index} className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">Prescribed by {item.prescribedBy}</p>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{item.date}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
+        {loading ? (
+             <div className="flex justify-center items-center h-48">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        ) : (
+            <div className="grid md:grid-cols-3 gap-6">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-lg font-medium flex items-center gap-2"><FileText /> Lab Reports</CardTitle>
-                 <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(true)}><FilePlus className="w-5 h-5 text-muted-foreground" /></Button>
-              </CardHeader>
-              <CardContent>
-                 <div className="space-y-4">
-                  {labReports.map((item, index) => (
-                    <div key={index} className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">{item.facility}</p>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{item.date}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-lg font-medium flex items-center gap-2"><Pill /> Prescriptions</CardTitle>
+                    <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(true)}><FilePlus className="w-5 h-5 text-muted-foreground" /></Button>
+                </CardHeader>
+                <CardContent>{renderList('prescription')}</CardContent>
+                </Card>
 
-             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-lg font-medium flex items-center gap-2"><History /> Treatment History</CardTitle>
-                 <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(true)}><FilePlus className="w-5 h-5 text-muted-foreground" /></Button>
-              </CardHeader>
-              <CardContent>
-                 <div className="space-y-4">
-                  {treatmentHistory.map((item, index) => (
-                    <div key={index} className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">{item.facility}</p>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{item.date}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-        </div>
+                <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-lg font-medium flex items-center gap-2"><FileTextIcon /> Lab Reports</CardTitle>
+                    <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(true)}><FilePlus className="w-5 h-5 text-muted-foreground" /></Button>
+                </CardHeader>
+                <CardContent>{renderList('lab_report')}</CardContent>
+                </Card>
+
+                <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-lg font-medium flex items-center gap-2"><History /> Treatment History</CardTitle>
+                    <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(true)}><FilePlus className="w-5 h-5 text-muted-foreground" /></Button>
+                </CardHeader>
+                <CardContent>{renderList('treatment_history')}</CardContent>
+                </Card>
+            </div>
+        )}
       </div>
     </AppLayout>
   );

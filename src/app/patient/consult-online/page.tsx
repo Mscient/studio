@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,32 +11,59 @@ import { useToast } from "@/hooks/use-toast";
 import { Star, Video, Loader2 } from "lucide-react";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
-const doctors = [
-    { id: "doc_1", name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, status: "Online", experience: "15 years", isCurrent: true, avatarHint: "caucasian female doctor" },
-    { id: "doc_2", name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, status: "Online", experience: "10 years", isCurrent: false, avatarHint: "black male doctor" },
-    { id: "doc_3", name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, status: "Offline", experience: "12 years", isCurrent: false, avatarHint: "east asian female doctor" },
-    { id: "doc_4", name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, status: "Online", experience: "20 years", isCurrent: false, avatarHint: "white male doctor" },
-];
-
-// Sort doctors to show the current one first, then by online status
-const sortedDoctors = doctors.sort((a, b) => {
-    if (a.isCurrent && !b.isCurrent) return -1;
-    if (!a.isCurrent && b.isCurrent) return 1;
-    if (a.status === 'Online' && b.status !== 'Online') return -1;
-    if (a.status !== 'Online' && b.status === 'Online') return 1;
-    return 0;
-});
+interface Doctor {
+  id: string;
+  name: string;
+  specialization: string;
+  rating: number;
+  status: "Online" | "Offline";
+  experience: string;
+  avatarHint: string;
+  isCurrent?: boolean;
+}
 
 export default function ConsultOnlinePage() {
   const { toast } = useToast();
   const router = useRouter();
   const [user] = useAuthState(auth);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadingDoctor, setLoadingDoctor] = useState<string | null>(null);
 
-  const handleConsult = async (doctor: typeof sortedDoctors[0]) => {
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      setLoading(true);
+      const q = query(collection(db, "users"), where("role", "==", "doctor"));
+      const querySnapshot = await getDocs(q);
+      const doctorsData = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name,
+          specialization: data.specialization || 'General Physician',
+          rating: data.rating || 4.5,
+          status: data.status || 'Offline',
+          experience: data.experience || '5 years',
+          avatarHint: data.avatarHint || 'doctor professional',
+        }
+      });
+      // Sort doctors to show Online ones first
+      doctorsData.sort((a, b) => {
+        if (a.status === 'Online' && b.status !== 'Online') return -1;
+        if (a.status !== 'Online' && b.status === 'Online') return 1;
+        return 0;
+      });
+
+      setDoctors(doctorsData);
+      setLoading(false);
+    }
+    fetchDoctors();
+  }, []);
+
+  const handleConsult = async (doctor: Doctor) => {
     if (!user) {
         toast({
             variant: "destructive",
@@ -46,7 +73,7 @@ export default function ConsultOnlinePage() {
         return;
     }
 
-    setLoadingDoctor(doctor.name);
+    setLoadingDoctor(doctor.id);
     
     try {
         const consultationRef = await addDoc(collection(db, "consultations"), {
@@ -64,8 +91,7 @@ export default function ConsultOnlinePage() {
             description: `Your video call with ${doctor.name} is starting.`,
         });
         
-        const meetUrl = `https://meet.google.com/lookup/${consultationRef.id}`;
-        // In a real app, you might want to open this in a new tab or embedded view
+        const meetUrl = `https://meet.google.com/lookup/healthvision-${consultationRef.id}`;
         window.location.href = meetUrl;
 
     } catch (error) {
@@ -80,6 +106,16 @@ export default function ConsultOnlinePage() {
     }
   };
   
+  if (loading) {
+    return (
+      <AppLayout userType="patient">
+        <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AppLayout>
+    )
+  }
+
   return (
     <AppLayout userType="patient">
       <div className="flex flex-col gap-4">
@@ -90,8 +126,8 @@ export default function ConsultOnlinePage() {
             </CardHeader>
         </Card>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {sortedDoctors.map(doctor => (
-                <Card key={doctor.name} className={doctor.isCurrent ? "border-primary border-2" : ""}>
+            {doctors.map(doctor => (
+                <Card key={doctor.id} className={doctor.isCurrent ? "border-primary border-2" : ""}>
                     <CardHeader className="items-center text-center relative">
                         {doctor.isCurrent && <Badge className="absolute top-2 right-2">Your Doctor</Badge>}
                         <Avatar className="w-24 h-24 mb-4 border">
@@ -124,12 +160,12 @@ export default function ConsultOnlinePage() {
                           disabled={doctor.status !== 'Online' || !!loadingDoctor}
                           onClick={() => handleConsult(doctor)}
                         >
-                            {loadingDoctor === doctor.name ? (
+                            {loadingDoctor === doctor.id ? (
                               <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                             ) : (
                               <Video className="mr-2 h-4 w-4"/>
                             )}
-                            {loadingDoctor === doctor.name ? "Starting..." : "Consult Now"}
+                            {loadingDoctor === doctor.id ? "Starting..." : "Consult Now"}
                         </Button>
                     </CardContent>
                 </Card>

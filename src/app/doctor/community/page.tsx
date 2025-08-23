@@ -15,18 +15,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-const myGroups = [
-  { id: 1, name: "Cardiology Case Studies", members: 45, description: "Discussing complex cardiology cases.", avatarHint: "heartbeat logo" },
-  { id: 2, name: "AI in Medicine Innovators", members: 120, description: "Exploring the frontier of AI in healthcare.", avatarHint: "brain circuit" },
-  { id: 3, name: "Pediatric Peer Support", members: 78, description: "A group for pediatric specialists.", avatarHint: "teddy bear" },
-];
+interface Group {
+  id: string;
+  name: string;
+  members: number;
+  description: string;
+  avatarHint: string;
+}
 
 export default function CommunityPage() {
   const [updates, setUpdates] = useState<MedicalResearchUpdate[]>([]);
   const [trends, setTrends] = useState<DailyHealthTrend[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingTrends, setLoadingTrends] = useState(true);
+  const [loadingGroups, setLoadingGroups] = useState(true);
   const { toast } = useToast();
 
   const handleLike = (title: string) => {
@@ -40,11 +46,13 @@ export default function CommunityPage() {
     const fetchData = async () => {
       setLoading(true);
       setLoadingTrends(true);
-      
+      setLoadingGroups(true);
+
       const researchPromise = getMedicalResearchUpdates();
       const trendsPromise = getDailyHealthTrends();
+      const groupsPromise = getDocs(collection(db, 'groups'));
 
-      const [researchResult, trendsResult] = await Promise.all([researchPromise, trendsPromise]);
+      const [researchResult, trendsResult, groupsSnapshot] = await Promise.all([researchPromise, trendsPromise, groupsPromise]);
 
       if (researchResult.success && researchResult.data) {
         setUpdates(researchResult.data);
@@ -55,6 +63,10 @@ export default function CommunityPage() {
         setTrends(trendsResult.data);
       }
       setLoadingTrends(false);
+
+      const groupsList = groupsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Group));
+      setGroups(groupsList);
+      setLoadingGroups(false);
     };
     fetchData();
   }, [toast]);
@@ -160,20 +172,26 @@ export default function CommunityPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className='space-y-1 p-2'>
-                        {myGroups.map(group => (
-                             <Link key={group.id} href={`/doctor/community/groups/${group.id}`} className="block">
-                                <div className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
-                                    <Avatar className='h-10 w-10'>
-                                        <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint={group.avatarHint}/>
-                                        <AvatarFallback><Users/></AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="font-semibold">{group.name}</p>
-                                        <p className="text-xs text-muted-foreground">{group.members} members</p>
+                        {loadingGroups ? (
+                            <div className="flex justify-center items-center h-24">
+                                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                            </div>
+                        ) : (
+                            groups.map(group => (
+                                 <Link key={group.id} href={`/doctor/community/groups/${group.id}`} className="block">
+                                    <div className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
+                                        <Avatar className='h-10 w-10'>
+                                            <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint={group.avatarHint}/>
+                                            <AvatarFallback><Users/></AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-semibold">{group.name}</p>
+                                            <p className="text-xs text-muted-foreground">{group.members} members</p>
+                                        </div>
                                     </div>
-                                </div>
-                            </Link>
-                        ))}
+                                </Link>
+                            ))
+                        )}
                     </CardContent>
                 </Card>
                  <Card>

@@ -21,8 +21,10 @@ import {
   Plus,
 } from 'lucide-react';
 import { getPrescriptionSuggestion } from '@/lib/actions';
-import type { PrescriptionSuggestionOutput } from '@/ai/flows/prescription-suggestion';
 import { useToast } from "@/hooks/use-toast";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const medicineSchema = z.object({
   name: z.string().min(1, 'Medicine name is required.'),
@@ -41,15 +43,18 @@ const formSchema = z.object({
   ),
   diagnosis: z.string().min(1, 'Diagnosis is required.'),
   symptoms: z.string().min(10, 'Please describe symptoms in detail.'),
-  medicines: z.array(medicineSchema),
+  medicines: z.array(medicineSchema).min(1, "At least one medicine is required."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function WritePrescriptionPage() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [user] = useAuthState(auth);
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -71,6 +76,7 @@ export default function WritePrescriptionPage() {
     const { symptoms, diagnosis } = form.getValues();
     if (!symptoms || !diagnosis) {
       form.setError('symptoms', { type: 'manual', message: 'Symptoms and diagnosis are required to generate suggestions.' });
+      form.setError('diagnosis', { type: 'manual', message: 'Please provide a diagnosis.' });
       return;
     }
     
@@ -92,14 +98,32 @@ export default function WritePrescriptionPage() {
     setIsGenerating(false);
   };
 
-  const onSubmit = (data: FormValues) => {
-    console.log('Prescription submitted:', data);
-    // Here you would typically send the data to your backend to save it.
-    toast({
-        title: "Prescription Saved",
-        description: "The new prescription has been saved successfully.",
-    });
-    form.reset();
+  const onSubmit = async (data: FormValues) => {
+    if (!user) {
+      toast({ variant: 'destructive', title: "Error", description: "You must be logged in to save a prescription."});
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, "prescriptions"), {
+        ...data,
+        patientAge: Number(data.patientAge),
+        doctorId: user.uid,
+        date: new Date().toISOString().split('T')[0],
+        createdAt: serverTimestamp(),
+      });
+
+      toast({
+          title: "Prescription Saved",
+          description: "The new prescription has been saved successfully.",
+      });
+      form.reset();
+    } catch(e) {
+      console.error("Error saving prescription: ", e);
+      toast({ variant: 'destructive', title: "Save Failed", description: "There was an error saving the prescription."});
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -310,11 +334,15 @@ export default function WritePrescriptionPage() {
                         >
                         <Plus className="mr-2 h-4 w-4" /> Add Medicine Manually
                     </Button>
+                    <FormMessage>{form.formState.errors.medicines?.message}</FormMessage>
                 </CardContent>
             </Card>
 
             <div className='flex justify-end'>
-                <Button type="submit" size="lg">Save Prescription</Button>
+                <Button type="submit" size="lg" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    {isSubmitting ? 'Saving...' : 'Save Prescription'}
+                </Button>
             </div>
           </form>
         </Form>

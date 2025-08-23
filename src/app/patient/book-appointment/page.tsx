@@ -6,17 +6,48 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Star } from "lucide-react";
+import { Star, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-const doctors = [
-    { name: "Dr. Emily Carter", specialization: "Cardiology", rating: 4.9, experience: "15 years", fee: "$150", avatarHint: "caucasian female doctor" },
-    { name: "Dr. Ben Hanson", specialization: "Dermatology", rating: 4.8, experience: "10 years", fee: "$120", avatarHint: "black male doctor" },
-    { name: "Dr. Sarah Lee", specialization: "Pediatrics", rating: 5.0, experience: "12 years", fee: "$100", avatarHint: "east asian female doctor" },
-    { name: "Dr. Michael Chen", specialization: "Neurology", rating: 4.7, experience: "20 years", fee: "$200", avatarHint: "white male doctor" },
-];
+interface Doctor {
+  id: string;
+  name: string;
+  specialization: string;
+  rating: number;
+  experience: string;
+  fee: string;
+  avatarHint: string;
+}
 
 export default function BookAppointmentPage() {
   const { toast } = useToast();
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      setLoading(true);
+      const q = query(collection(db, "users"), where("role", "==", "doctor"));
+      const querySnapshot = await getDocs(q);
+      const doctorsData = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name,
+          specialization: data.specialization || 'General Physician',
+          rating: data.rating || 4.5,
+          experience: data.experience || '5 years',
+          fee: data.fee || '$100',
+          avatarHint: data.avatarHint || 'doctor professional',
+        }
+      });
+      setDoctors(doctorsData);
+      setLoading(false);
+    }
+    fetchDoctors();
+  }, []);
 
   const handleBooking = (doctorName: string) => {
     toast({
@@ -24,6 +55,16 @@ export default function BookAppointmentPage() {
       description: `Your appointment with ${doctorName} has been confirmed.`,
     });
   };
+  
+  if (loading) {
+    return (
+        <AppLayout userType="patient">
+            <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        </AppLayout>
+    )
+  }
 
   return (
     <AppLayout userType="patient">
@@ -36,7 +77,7 @@ export default function BookAppointmentPage() {
         </Card>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {doctors.map(doctor => (
-                <Card key={doctor.name}>
+                <Card key={doctor.id}>
                     <CardHeader className="items-center text-center">
                         <Avatar className="w-24 h-24 mb-4 border">
                             <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint={doctor.avatarHint}/>

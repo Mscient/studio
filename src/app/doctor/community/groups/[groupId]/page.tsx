@@ -1,40 +1,103 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, Paperclip, Phone, Send, Video } from 'lucide-react';
+import { ArrowLeft, Paperclip, Phone, Send, Video, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { db, auth } from '@/lib/firebase';
+import { doc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
+interface Group {
+  name: string;
+  members: number;
+  description: string;
+  avatarHint: string;
+}
 
-// Mock data, in a real app this would come from an API
-const getGroupDetails = (groupId: string) => {
-    const groups: {[key: string]: any} = {
-        '1': { name: "Cardiology Case Studies", members: 45, description: "Discussing complex cardiology cases.", avatarHint: "heartbeat logo" },
-        '2': { name: "AI in Medicine Innovators", members: 120, description: "Exploring the frontier of AI in healthcare.", avatarHint: "brain circuit" },
-        '3': { name: "Pediatric Peer Support", members: 78, description: "A group for pediatric specialists.", avatarHint: "teddy bear" },
-    }
-    return groups[groupId] || { name: "Unknown Group", members: 0, description: "", avatarHint: "medical cross" };
-};
-
-const messages = [
-    { id: 1, sender: "Dr. Anya Sharma", content: "Has anyone seen the latest trial data on the new SGLT2 inhibitor for heart failure? The results look promising.", timestamp: "10:30 AM", isMe: false, avatarHint: "woman doctor" },
-    { id: 2, sender: "You", content: "I read the abstract. It seems particularly effective for patients with preserved ejection fraction. I've attached the full paper.", timestamp: "10:32 AM", isMe: true, avatarHint: "man doctor" },
-    { id: 3, sender: "Dr. Ben Carter", content: "Thanks for sharing! This could be a game-changer. I have a patient who might be a good candidate. I'm concerned about the risk of euglycemic DKA though.", timestamp: "10:35 AM", isMe: false, avatarHint: "male doctor" },
-    { id: 4, sender: "Dr. Anya Sharma", content: "Good point, Ben. The risk is low but non-trivial. We need to be vigilant about patient education on this.", timestamp: "10:36 AM", isMe: false, avatarHint: "female doctor" },
-];
-
+interface Message {
+  id: string;
+  sender: string;
+  senderId: string;
+  content: string;
+  timestamp: any;
+  avatarHint: string;
+}
 
 export default function GroupChatPage() {
   const params = useParams();
   const groupId = typeof params.groupId === 'string' ? params.groupId : '';
-  const group = getGroupDetails(groupId);
+  const [group, setGroup] = useState<Group | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [user] = useAuthState(auth);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+
+  useEffect(() => {
+    if (!groupId) return;
+
+    const fetchGroupDetails = async () => {
+      const groupRef = doc(db, 'groups', groupId);
+      const groupSnap = await getDoc(groupRef);
+      if (groupSnap.exists()) {
+        setGroup(groupSnap.data() as Group);
+      } else {
+        console.error("No such group!");
+      }
+    };
+
+    fetchGroupDetails();
+
+    const q = query(collection(db, 'groups', groupId, 'messages'), orderBy('timestamp', 'asc'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const msgs: Message[] = [];
+      querySnapshot.forEach((doc) => {
+        msgs.push({ id: doc.id, ...doc.data() } as Message);
+      });
+      setMessages(msgs);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [groupId]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newMessage.trim() === "" || !user || !groupId) return;
+
+    await addDoc(collection(db, 'groups', groupId, 'messages'), {
+      sender: user.displayName || "Anonymous Doctor",
+      senderId: user.uid,
+      content: newMessage,
+      timestamp: serverTimestamp(),
+      avatarHint: 'doctor professional',
+    });
+
+    setNewMessage("");
+  };
+
+  if (loading || !group) {
+    return (
+      <AppLayout userType="doctor">
+        <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AppLayout>
+    )
+  }
 
   return (
     <AppLayout userType="doctor">
@@ -65,29 +128,38 @@ export default function GroupChatPage() {
         
         <CardContent className="flex-grow overflow-y-auto p-4 space-y-4 bg-muted/20">
           {messages.map(message => (
-            <div key={message.id} className={cn("flex items-end gap-2", message.isMe ? "justify-end" : "justify-start")}>
-                {!message.isMe && (
+            <div key={message.id} className={cn("flex items-end gap-2", message.senderId === user?.uid ? "justify-end" : "justify-start")}>
+                {message.senderId !== user?.uid && (
                      <Avatar className="h-8 w-8">
                         <AvatarImage src={`https://placehold.co/32x32.png`} data-ai-hint={message.avatarHint}/>
                         <AvatarFallback>{message.sender.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
                     </Avatar>
                 )}
-              <div className={cn("max-w-xs md:max-w-md rounded-lg px-3 py-2", message.isMe ? "bg-primary text-primary-foreground rounded-br-none" : "bg-background rounded-bl-none shadow-sm")}>
-                {!message.isMe && <p className="text-xs font-semibold pb-1">{message.sender}</p>}
+              <div className={cn("max-w-xs md:max-w-md rounded-lg px-3 py-2", message.senderId === user?.uid ? "bg-primary text-primary-foreground rounded-br-none" : "bg-background rounded-bl-none shadow-sm")}>
+                {message.senderId !== user?.uid && <p className="text-xs font-semibold pb-1">{message.sender}</p>}
                 <p className="text-sm">{message.content}</p>
-                <p className="text-xs text-right mt-1 opacity-70">{message.timestamp}</p>
+                <p className="text-xs text-right mt-1 opacity-70">
+                  {message.timestamp?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
               </div>
             </div>
           ))}
+           <div ref={messagesEndRef} />
         </CardContent>
 
-        <CardFooter className="p-2 border-t bg-background rounded-t-none">
-            <div className="flex items-center w-full gap-2">
-                <Button variant="ghost" size="icon"><Paperclip /></Button>
-                <Input placeholder="Type a message..."/>
-                <Button size="icon"><Send/></Button>
-            </div>
-        </CardFooter>
+        <form onSubmit={handleSendMessage}>
+            <CardFooter className="p-2 border-t bg-background rounded-t-none">
+                <div className="flex items-center w-full gap-2">
+                    <Button variant="ghost" size="icon" type="button"><Paperclip /></Button>
+                    <Input 
+                      placeholder="Type a message..." 
+                      value={newMessage} 
+                      onChange={(e) => setNewMessage(e.target.value)}
+                    />
+                    <Button size="icon" type="submit"><Send/></Button>
+                </div>
+            </CardFooter>
+        </form>
       </div>
     </AppLayout>
   );

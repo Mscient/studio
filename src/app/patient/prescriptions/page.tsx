@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useEffect, useState } from 'react';
 import { AppLayout } from "@/components/app-layout";
 import {
   Card,
@@ -13,90 +14,79 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Stethoscope, User, Calendar, Pill, Clock, ShieldCheck, Info, Bell, Download, Printer } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { FileText, Bell, Download, Printer, Loader2 } from "lucide-react";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from '@/lib/firebase';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
-const prescriptions = [
-  {
-    id: 1,
-    doctor: "Dr. Ananya Mehta",
-    doctorSpecialty: "MBBS, MD – General Physician",
-    clinic: "Apollo Clinic",
-    patient: "Rahul Sharma",
-    patientAge: 28,
-    diagnosis: "Viral Upper Respiratory Infection (Common Cold + Mild Fever)",
-    date: "2024-07-28",
-    avatarUrl: "https://i.ibb.co/9TRmR6C/female-doctor-smiling.jpg",
-    avatarHint: "female doctor smiling",
-    medicines: [
-      {
-        name: "Paracetamol 500 mg",
-        brand: "Crocin Advance",
-        dosage: "1 tablet",
-        frequency: "Every 6 hours",
-        duration: "3 days",
-        purpose: "Reduces fever, relieves headache and body ache",
-      },
-      {
-        name: "Cetirizine 10 mg",
-        brand: "Cetzine",
-        dosage: "1 tablet",
-        frequency: "Once at night",
-        duration: "5 days",
-        purpose: "Relieves sneezing, runny nose",
-      },
-      {
-        name: "Vitamin C 500 mg",
-        brand: "Limcee Chewable Tablet",
-        dosage: "1 tablet",
-        frequency: "Once daily",
-        duration: "7 days",
-        purpose: "Boosts immunity",
-      },
-    ],
-  },
-  {
-    id: 2,
-    doctor: "Dr. Rakesh Iyer",
-    doctorSpecialty: "MD – Internal Medicine, Endocrinology",
-    clinic: "Fortis Hospital",
-    patient: "Smt. Kavita Joshi",
-    patientAge: 52,
-    diagnosis: "Type 2 Diabetes Mellitus + Hypertension",
-    date: "2024-07-25",
-    avatarUrl: "https://placehold.co/40x40.png",
-    avatarHint: "indian male doctor",
-    medicines: [
-      {
-        name: "Metformin 500 mg",
-        brand: "Glycomet SR 500",
-        dosage: "1 tablet",
-        frequency: "Twice daily",
-        duration: "Continuous",
-        purpose: "Controls blood sugar",
-      },
-      {
-        name: "Telmisartan 40 mg",
-        brand: "Telma-40",
-        dosage: "1 tablet",
-        frequency: "Once daily",
-        duration: "Continuous",
-        purpose: "Controls blood pressure",
-      },
-      {
-        name: "Atorvastatin 10 mg",
-        brand: "Atorva-10",
-        dosage: "1 tablet",
-        frequency: "Once at night",
-        duration: "Continuous",
-        purpose: "Lowers cholesterol",
-      },
-    ],
-  },
-];
+interface Medicine {
+  name: string;
+  brand?: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  purpose: string;
+}
+
+interface Prescription {
+  id: string;
+  doctorId: string;
+  doctorName: string;
+  doctorSpecialty: string;
+  doctorAvatarHint: string;
+  clinic: string;
+  patientName: string;
+  patientAge: number;
+  diagnosis: string;
+  date: string;
+  medicines: Medicine[];
+}
 
 export default function PrescriptionsPage() {
   const { toast } = useToast();
+  const [user] = useAuthState(auth);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPrescriptions = async () => {
+      if (!user) return;
+      setLoading(true);
+
+      const q = query(collection(db, 'prescriptions'), where('patientId', '==', user.uid));
+      const querySnapshot = await getDocs(q);
+
+      const prescriptionsData = await Promise.all(
+        querySnapshot.docs.map(async (docSnap) => {
+          const data = docSnap.data();
+          let doctorData = { name: "Dr. Unknown", specialty: "N/A", avatarHint: "doctor", clinic: "N/A" };
+          
+          if(data.doctorId) {
+            const doctorRef = doc(db, 'users', data.doctorId);
+            const doctorSnap = await getDoc(doctorRef);
+            if (doctorSnap.exists()) {
+              const d = doctorSnap.data();
+              doctorData = { name: d.name, specialty: d.specialty || 'General Physician', avatarHint: d.avatarHint, clinic: d.clinic || 'General Clinic' };
+            }
+          }
+
+          return {
+            id: docSnap.id,
+            ...data,
+            doctorName: doctorData.name,
+            doctorSpecialty: doctorData.specialty,
+            doctorAvatarHint: doctorData.avatarHint,
+            clinic: doctorData.clinic,
+          } as Prescription;
+        })
+      );
+
+      setPrescriptions(prescriptionsData);
+      setLoading(false);
+    };
+
+    fetchPrescriptions();
+  }, [user]);
 
   const handleSetReminder = (medicineName: string) => {
     if (!("Notification" in window)) {
@@ -130,6 +120,16 @@ export default function PrescriptionsPage() {
       description: `Your prescription is being prepared for ${action.toLowerCase()}.`,
     })
   }
+  
+  if (loading) {
+    return (
+        <AppLayout userType="patient">
+            <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        </AppLayout>
+    )
+  }
 
   return (
     <AppLayout userType="patient">
@@ -145,6 +145,10 @@ export default function PrescriptionsPage() {
             </CardDescription>
           </CardHeader>
         </Card>
+        
+        {prescriptions.length === 0 && !loading && (
+          <p className="text-center text-muted-foreground pt-8">No prescriptions found.</p>
+        )}
 
         <div className="space-y-8">
           {prescriptions.map((prescription) => (
@@ -153,18 +157,18 @@ export default function PrescriptionsPage() {
                  <div className="flex flex-col sm:flex-row justify-between gap-4">
                   <div className="flex items-center gap-4">
                      <Avatar className="w-16 h-16 border-2 border-primary">
-                        <AvatarImage src={prescription.avatarUrl} data-ai-hint={prescription.avatarHint}/>
-                        <AvatarFallback>{prescription.doctor.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
+                        <AvatarImage src={`https://placehold.co/64x64.png`} data-ai-hint={prescription.doctorAvatarHint}/>
+                        <AvatarFallback>{prescription.doctorName.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-xl font-bold text-primary">{prescription.doctor}</p>
+                      <p className="text-xl font-bold text-primary">{prescription.doctorName}</p>
                       <p className="text-sm text-muted-foreground">{prescription.doctorSpecialty}</p>
                        <p className="text-sm font-semibold text-foreground">{prescription.clinic}</p>
                     </div>
                   </div>
                   <div className="text-sm text-muted-foreground text-left sm:text-right">
                     <p><strong>Date:</strong> {new Date(prescription.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
-                    <p><strong>Prescription ID:</strong> #{prescription.id.toString().padStart(5, '0')}</p>
+                    <p><strong>Prescription ID:</strong> #{prescription.id.substring(0,6)}</p>
                   </div>
                 </div>
               </CardHeader>
@@ -172,7 +176,7 @@ export default function PrescriptionsPage() {
                 <div className="grid md:grid-cols-2 gap-4 border-b pb-4">
                     <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">Patient</p>
-                        <p className="font-semibold">{prescription.patient} (Age: {prescription.patientAge})</p>
+                        <p className="font-semibold">{prescription.patientName} (Age: {prescription.patientAge})</p>
                     </div>
                     <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">Diagnosis</p>
@@ -181,10 +185,10 @@ export default function PrescriptionsPage() {
                 </div>
 
                 <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Pill className="text-primary"/> Medications (Rx)</h3>
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">Medications (Rx)</h3>
                     <div className="space-y-4">
-                      {prescription.medicines.map((med) => (
-                        <div key={med.name} className="p-4 rounded-lg border bg-background/50 space-y-3 relative group">
+                      {prescription.medicines.map((med, index) => (
+                        <div key={index} className="p-4 rounded-lg border bg-background/50 space-y-3 relative group">
                           <div className="flex justify-between items-start">
                               <p className="font-bold text-md text-foreground pr-16">{med.name} <span className="text-sm font-normal text-muted-foreground">({med.brand})</span></p>
                               <Button variant="ghost" size="sm" className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleSetReminder(med.name)}>

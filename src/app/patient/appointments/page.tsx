@@ -5,24 +5,88 @@ import { AppLayout } from "@/components/app-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, CheckCircle, Clock, Video, XCircle, Bell, Star } from "lucide-react";
+import { Calendar, CheckCircle, Clock, Video, XCircle, Bell, Star, Loader2 } from "lucide-react";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from '@/lib/firebase';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { useEffect, useState } from "react";
 
-const upcomingAppointments = [
-  { id: "apt_1", doctor: "Dr. Emily Carter", specialty: "Cardiology", date: "2024-08-15", time: "10:00 AM", type: "Video", status: "Confirmed", avatarHint: "caucasian female doctor", rating: 4.9 },
-  { id: "apt_2", doctor: "Dr. Ben Hanson", specialty: "Dermatology", date: "2024-08-22", time: "02:30 PM", type: "In-Person", status: "Confirmed", avatarHint: "black male doctor", rating: 4.8 },
-];
-
-const pastAppointments = [
-  { id: "apt_3", doctor: "Dr. Sarah Lee", specialty: "Pediatrics", date: "2024-07-10", time: "11:00 AM", type: "Video", status: "Completed", avatarHint: "east asian female doctor", rating: 5.0 },
-  { id: "apt_4", doctor: "Dr. Michael Chen", specialty: "Neurology", date: "2024-06-05", time: "09:00 AM", type: "In-Person", status: "Cancelled", avatarHint: "white male doctor", rating: 4.7 },
-];
-
+interface Appointment {
+  id: string;
+  doctorId: string;
+  doctorName: string;
+  doctorSpecialty: string;
+  doctorAvatarHint: string;
+  doctorRating: number;
+  date: string;
+  time: string;
+  type: string;
+  status: "Confirmed" | "Completed" | "Cancelled";
+}
 
 export default function AppointmentsPage() {
   const { toast } = useToast();
+  const [user] = useAuthState(auth);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
+  const [pastAppointments, setPastAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (!user) return;
+      setLoading(true);
+
+      const q = query(collection(db, "appointments"), where("patientId", "==", user.uid));
+      const querySnapshot = await getDocs(q);
+
+      const now = new Date();
+      const upcoming: Appointment[] = [];
+      const past: Appointment[] = [];
+
+      for (const docSnap of querySnapshot.docs) {
+          const data = docSnap.data();
+          const appointmentDate = new Date(`${data.date} ${data.time}`);
+          
+          let doctorData = { name: "Unknown Doctor", specialty: "N/A", avatarHint: "doctor professional", rating: 4.5 };
+          if (data.doctorId) {
+              const doctorRef = doc(db, 'users', data.doctorId);
+              const doctorSnap = await getDoc(doctorRef);
+              if (doctorSnap.exists()) {
+                  const d = doctorSnap.data();
+                  doctorData = { name: d.name, specialty: d.specialty || "General Physician", avatarHint: d.avatarHint, rating: d.rating || 4.5 };
+              }
+          }
+
+          const appointment: Appointment = {
+              id: docSnap.id,
+              doctorId: data.doctorId,
+              doctorName: doctorData.name,
+              doctorSpecialty: doctorData.specialty,
+              doctorAvatarHint: doctorData.avatarHint,
+              doctorRating: doctorData.rating,
+              date: data.date,
+              time: data.time,
+              type: data.type,
+              status: data.status,
+          };
+          
+          if (appointmentDate > now) {
+              upcoming.push(appointment);
+          } else {
+              past.push(appointment);
+          }
+      }
+      
+      setUpcomingAppointments(upcoming);
+      setPastAppointments(past);
+      setLoading(false);
+    };
+
+    fetchAppointments();
+  }, [user]);
 
   const handleAction = (message: string) => {
     toast({
@@ -56,20 +120,20 @@ export default function AppointmentsPage() {
     });
   }
 
-  const AppointmentCard = ({ appointment, isUpcoming }: { appointment: any, isUpcoming: boolean }) => (
+  const AppointmentCard = ({ appointment, isUpcoming }: { appointment: Appointment, isUpcoming: boolean }) => (
     <Card className={!isUpcoming ? "opacity-70" : ""}>
         <CardHeader>
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-4">
                     <Avatar className="w-16 h-16 border">
-                        <AvatarImage src={`https://placehold.co/64x64.png`} data-ai-hint={appointment.avatarHint} />
-                        <AvatarFallback>{appointment.doctor.split(" ").map((n:string)=>n[0]).join("")}</AvatarFallback>
+                        <AvatarImage src={`https://placehold.co/64x64.png`} data-ai-hint={appointment.doctorAvatarHint} />
+                        <AvatarFallback>{appointment.doctorName.split(" ").map((n:string)=>n[0]).join("")}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <p className="font-bold text-lg">{appointment.doctor}</p>
-                        <p className="text-sm text-muted-foreground">{appointment.specialty}</p>
+                        <p className="font-bold text-lg">{appointment.doctorName}</p>
+                        <p className="text-sm text-muted-foreground">{appointment.doctorSpecialty}</p>
                          <div className="flex items-center gap-1 text-sm mt-1">
-                            <Star className="w-4 h-4 fill-primary text-primary" /> {appointment.rating}
+                            <Star className="w-4 h-4 fill-primary text-primary" /> {appointment.doctorRating}
                         </div>
                     </div>
                 </div>
@@ -96,7 +160,7 @@ export default function AppointmentsPage() {
                     <>
                         <Button onClick={() => handleAction('Joining video call...')}>Join Video Call</Button>
                         <Button variant="outline" onClick={() => handleAction('Viewing profile...')}>View Profile</Button>
-                        <Button variant="outline" onClick={() => handleSetReminder(appointment.doctor, `${appointment.date} at ${appointment.time}`)}>
+                        <Button variant="outline" onClick={() => handleSetReminder(appointment.doctorName, `${appointment.date} at ${appointment.time}`)}>
                             <Bell className="mr-2"/> Set Reminder
                         </Button>
                         <Button variant="outline" onClick={() => handleAction('Reschedule request sent.')}>Reschedule</Button>
@@ -105,13 +169,33 @@ export default function AppointmentsPage() {
                 ) : (
                     <>
                         <Button variant="secondary" onClick={() => handleAction('Opening consultation notes...')}>View Consultation Notes</Button>
-                        <Button variant="outline" onClick={() => handleAction(`Redirecting to book with ${appointment.doctor}...`)}>Book Again</Button>
+                        <Button variant="outline" onClick={() => handleAction(`Redirecting to book with ${appointment.doctorName}...`)}>Book Again</Button>
                     </>
                 )}
             </div>
         </CardContent>
     </Card>
   );
+
+  const renderContent = (appointments: Appointment[], isUpcoming: boolean) => {
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-48">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+    if (appointments.length === 0) {
+        return <p className="text-center text-muted-foreground pt-8">No {isUpcoming ? 'upcoming' : 'past'} appointments found.</p>
+    }
+    return (
+        <div className="space-y-4 pt-4">
+            {appointments.map(apt => (
+                <AppointmentCard key={apt.id} appointment={apt} isUpcoming={isUpcoming} />
+            ))}
+        </div>
+    );
+  }
 
   return (
     <AppLayout userType="patient">
@@ -129,18 +213,10 @@ export default function AppointmentsPage() {
                 <TabsTrigger value="past">Past</TabsTrigger>
             </TabsList>
             <TabsContent value="upcoming">
-                <div className="space-y-4 pt-4">
-                    {upcomingAppointments.map(apt => (
-                        <AppointmentCard key={apt.id} appointment={apt} isUpcoming={true} />
-                    ))}
-                </div>
+                {renderContent(upcomingAppointments, true)}
             </TabsContent>
             <TabsContent value="past">
-                 <div className="space-y-4 pt-4">
-                    {pastAppointments.map(apt => (
-                        <AppointmentCard key={apt.id} appointment={apt} isUpcoming={false} />
-                    ))}
-                </div>
+                {renderContent(pastAppointments, false)}
             </TabsContent>
         </Tabs>
       </div>

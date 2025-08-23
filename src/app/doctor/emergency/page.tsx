@@ -13,17 +13,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { MoreHorizontal, PlusCircle, Siren } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
+import { MoreHorizontal, PlusCircle, Siren, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { formatDistanceToNow } from 'date-fns';
 
-const initialEmergencyRequests = [
-  { id: "er_1", type: "O- Negative Blood", location: "City General Hospital", urgency: "Critical", posted: "15 mins ago", details: "Urgent need for 2 units of O- negative blood for a trauma patient in the ER." },
-  { id: "er_2", type: "On-call Neurologist", location: "St. Luke's Medical Center", urgency: "Urgent", posted: "45 mins ago", details: "Neurologist consultation required for a patient with acute stroke symptoms." },
-  { id: "er_3", type: "Portable Ventilator", location: "Community Clinic", urgency: "High", posted: "2 hours ago", details: "Portable ventilator needed for patient transport to a higher-level facility." },
-  { id: "er_4", type: "Kidney Donor (A+)", location: "Metro Health Institute", urgency: "Urgent", posted: "5 hours ago", details: "Searching for a compatible A+ kidney donor for a patient with end-stage renal disease." },
-  { id: "er_5", type: "Cardiothoracic Surgeon", location: "City General Hospital", urgency: "Critical", posted: "1 day ago", details: "Immediate availability of a cardiothoracic surgeon required for emergency bypass surgery." },
-];
+interface EmergencyRequest {
+    id: string;
+    type: string;
+    location: string;
+    urgency: "Critical" | "Urgent" | "High";
+    posted: any;
+    details: string;
+}
 
 const urgencyVariantMap = {
     "Critical": "destructive",
@@ -32,22 +35,38 @@ const urgencyVariantMap = {
 } as const;
 
 export default function EmergencyPage() {
-  const [requests, setRequests] = useState(initialEmergencyRequests);
+  const [requests, setRequests] = useState<EmergencyRequest[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isNewRequestOpen, setIsNewRequestOpen] = useState(false);
   const { toast } = useToast();
 
-  const handlePostRequest = (event: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    const q = query(collection(db, "emergencyRequests"), orderBy("posted", "desc"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const requestsData: EmergencyRequest[] = [];
+        querySnapshot.forEach((doc) => {
+            requestsData.push({ id: doc.id, ...doc.data() } as EmergencyRequest);
+        });
+        setRequests(requestsData);
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handlePostRequest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const newRequest = {
-        id: `er_${requests.length + 1}`,
         type: formData.get("type") as string,
         location: formData.get("location") as string,
         urgency: formData.get("urgency") as "Critical" | "Urgent" | "High",
         details: formData.get("details") as string,
-        posted: "Just now",
+        posted: serverTimestamp(),
     };
-    setRequests([newRequest, ...requests]);
+    
+    await addDoc(collection(db, "emergencyRequests"), newRequest);
+
     setIsNewRequestOpen(false);
     toast({
         title: "Request Posted",
@@ -129,16 +148,25 @@ export default function EmergencyPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {requests.map(req => (
+                    {loading ? (
+                        <TableRow>
+                            <TableCell colSpan={5} className="text-center">
+                                <div className="flex justify-center items-center p-4">
+                                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+                        requests.map(req => (
                         <TableRow key={req.id}>
                             <TableCell className="font-medium">{req.type}</TableCell>
                             <TableCell>{req.location}</TableCell>
                             <TableCell>
-                                <Badge variant={urgencyVariantMap[req.urgency as keyof typeof urgencyVariantMap] || 'secondary'}>
+                                <Badge variant={urgencyVariantMap[req.urgency] || 'secondary'}>
                                     {req.urgency}
                                 </Badge>
                             </TableCell>
-                            <TableCell>{req.posted}</TableCell>
+                            <TableCell>{req.posted ? formatDistanceToNow(req.posted.toDate(), { addSuffix: true }) : 'Just now'}</TableCell>
                             <TableCell>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -156,11 +184,11 @@ export default function EmergencyPage() {
                                                 <DialogHeader>
                                                     <DialogTitle>{req.type}</DialogTitle>
                                                     <DialogDescription>
-                                                        <Badge variant={urgencyVariantMap[req.urgency as keyof typeof urgencyVariantMap] || 'secondary'}>
+                                                        <Badge variant={urgencyVariantMap[req.urgency] || 'secondary'}>
                                                             {req.urgency}
                                                         </Badge>
                                                         <p className="mt-2">Location: <strong>{req.location}</strong></p>
-                                                        <p>Posted: {req.posted}</p>
+                                                        <p>Posted: {req.posted ? formatDistanceToNow(req.posted.toDate(), { addSuffix: true }) : 'Just now'}</p>
                                                     </DialogDescription>
                                                 </DialogHeader>
                                                 <div className="py-4">
@@ -177,7 +205,7 @@ export default function EmergencyPage() {
                                 </DropdownMenu>
                             </TableCell>
                         </TableRow>
-                    ))}
+                    )))}
                 </TableBody>
             </Table>
         </CardContent>
