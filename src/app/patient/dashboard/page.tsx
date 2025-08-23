@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode, BrainCircuit, Pill, Building } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import QRCode from "qrcode.react";
 import { useEffect, useState } from "react";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
@@ -17,12 +16,10 @@ import { doc, getDoc } from 'firebase/firestore';
 
 export default function PatientDashboard() {
   const [user] = useAuthState(auth);
-  const [profileUrl, setProfileUrl] = useState('');
   const [userName, setUserName] = useState('Welcome back!');
 
   useEffect(() => {
     if (user) {
-      setProfileUrl(`${window.location.origin}/patient/profile/${user.uid}`);
       const fetchUserData = async () => {
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
@@ -128,26 +125,6 @@ export default function PatientDashboard() {
         </div>
 
         <div className="space-y-4">
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle className="flex items-center gap-2">
-                <QrCode />
-                Share Profile
-              </CardTitle>
-              <CardDescription>
-                Show this QR code to your doctor to share your health profile instantly.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center justify-center p-4">
-              {profileUrl ? (
-                <div className="p-3 bg-white rounded-lg">
-                  <QRCode value={profileUrl} size={140} />
-                </div>
-              ) : (
-                <div className="w-36 h-36 bg-muted rounded-lg animate-pulse" />
-              )}
-            </CardContent>
-          </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between border-b">
               <CardTitle>Upcoming Appointments</CardTitle>
