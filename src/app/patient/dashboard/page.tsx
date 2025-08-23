@@ -10,16 +10,29 @@ import Image from "next/image";
 import Link from "next/link";
 import QRCode from "qrcode.react";
 import { useEffect, useState } from "react";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 
 export default function PatientDashboard() {
+  const [user] = useAuthState(auth);
   const [profileUrl, setProfileUrl] = useState('');
+  const [userName, setUserName] = useState('Welcome back!');
 
   useEffect(() => {
-    // In a real app, you would fetch the user's unique ID
-    const userId = "alex-murray-123"; 
-    setProfileUrl(`${window.location.origin}/patient/profile/${userId}`);
-  }, []);
+    if (user) {
+      setProfileUrl(`${window.location.origin}/patient/profile/${user.uid}`);
+      const fetchUserData = async () => {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            setUserName(`Welcome back, ${docSnap.data().name.split(' ')[0]}!`);
+        }
+      };
+      fetchUserData();
+    }
+  }, [user]);
 
   return (
     <AppLayout userType="patient">
@@ -28,7 +41,7 @@ export default function PatientDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center border-b">
               <div className="grid gap-2">
-                <CardTitle>Welcome back, Alex!</CardTitle>
+                <CardTitle>{userName}</CardTitle>
                 <CardDescription>
                   Here's your health summary. Ready to take control of your well-being?
                 </CardDescription>
@@ -172,7 +185,7 @@ export default function PatientDashboard() {
             </CardHeader>
             <CardContent className="grid gap-3 p-4">
               <div className="flex items-center gap-4">
-                <Image src="https://placehold.co/40x40.png" alt="Dr. Carter" width={40} height={40} className="rounded-full" data-ai-hint="caucasian female doctor"/>
+                <Image src="https://i.ibb.co/6yD3g0F/caucasian-female-doctor.png" alt="Dr. Carter" width={40} height={40} className="rounded-full" data-ai-hint="caucasian female doctor"/>
                 <div className="grid gap-1">
                   <p className="text-sm font-medium leading-none">
                     Dr. Emily Carter
@@ -188,7 +201,7 @@ export default function PatientDashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <Image src="https://placehold.co/40x40.png" alt="Dr. Hanson" width={40} height={40} className="rounded-full" data-ai-hint="black male doctor"/>
+                <Image src="https://i.ibb.co/hM6g3P5/black-male-doctor.png" alt="Dr. Hanson" width={40} height={40} className="rounded-full" data-ai-hint="black male doctor"/>
                 <div className="grid gap-1">
                   <p className="text-sm font-medium leading-none">
                     Dr. Ben Hanson

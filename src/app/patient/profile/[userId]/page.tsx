@@ -17,6 +17,7 @@ interface PatientData {
     age: number;
     email: string;
     phone: string;
+    gender: string;
     bloodType: string;
     allergies: string[];
     conditions: string[];
@@ -35,14 +36,14 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          // In a real app, you would have more robust type checking
           const data = docSnap.data();
           setPatient({
               name: data.name || "N/A",
               email: data.email || "N/A",
-              // Mocking data that isn't in the user record yet
-              age: data.age || 34,
-              phone: data.phone || "+1 (555) 123-4567",
+              age: data.age || 0,
+              phone: data.phone || "N/A",
+              gender: data.gender || "N/A",
+              // Mocking data not yet in firestore
               bloodType: data.bloodType || "O+",
               allergies: data.allergies || ["Peanuts", "Pollen"],
               conditions: data.conditions || ["Hypertension", "Asthma"],
@@ -112,9 +113,14 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
                             <CardTitle className="flex items-center gap-2 text-lg"><User /> Personal Information</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 p-4">
-                            <div className="flex justify-between text-sm">
+                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Age</span>
-                                <span className="font-medium">{patient.age}</span>
+                                <span className="font-medium">{patient.age || 'N/A'}</span>
+                            </div>
+                            <Separator />
+                             <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Gender</span>
+                                <span className="font-medium capitalize">{patient.gender || 'N/A'}</span>
                             </div>
                             <Separator />
                             <div className="flex justify-between text-sm">
@@ -124,7 +130,7 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
                              <Separator />
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Phone</span>
-                                <span className="font-medium">{patient.phone}</span>
+                                <span className="font-medium">{patient.phone || 'N/A'}</span>
                             </div>
                         </CardContent>
                     </Card>

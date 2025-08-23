@@ -42,9 +42,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "./app-logo";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { signOut } from "firebase/auth";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 type NavItem = {
   href: string;
@@ -81,6 +83,23 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
+  const [user, loading] = useAuthState(auth);
+  const [userInitial, setUserInitial] = React.useState("");
+
+  React.useEffect(() => {
+    if (user) {
+        const fetchUserData = async () => {
+            const docRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const name = docSnap.data().name || "";
+                setUserInitial(name.split(" ").map((n: string) => n[0]).join(""));
+            }
+        };
+        fetchUserData();
+    }
+  }, [user]);
+
   const navItems = userType === "patient" ? patientNavItems : doctorNavItems;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
@@ -209,7 +228,7 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
               >
                 <Avatar>
                   <AvatarImage src={`https://i.ibb.co/yPVRrG0/happy-man.png`} data-ai-hint={userType === 'patient' ? 'happy man' : 'happy woman'} alt="User Avatar" />
-                  <AvatarFallback>{userType === 'patient' ? 'AM' : 'DC'}</AvatarFallback>
+                  <AvatarFallback>{loading ? '' : userInitial}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>

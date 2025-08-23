@@ -28,11 +28,17 @@ export default function Home() {
     const formData = new FormData(event.currentTarget as HTMLFormElement);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const selectedRole = formData.get('role') as string;
 
     try {
       if (isRegister) {
         // Registration
         const name = formData.get('name') as string;
+        const age = formData.get('age') as string;
+        const gender = formData.get('gender') as string;
+        const contact = formData.get('contact') as string;
+        const govtId = formData.get('govtId') as string;
+        
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
@@ -41,18 +47,22 @@ export default function Home() {
             uid: user.uid,
             name: name,
             email: user.email,
-            role: role,
+            role: selectedRole,
+            age: parseInt(age, 10) || null,
+            gender: gender,
+            phone: contact,
+            govtId: govtId,
             createdAt: new Date(),
         });
         
         toast({ title: "Registration Successful", description: "You can now log in." });
-        router.push(role === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
+        router.push(selectedRole === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
 
       } else {
         // Login
         await signInWithEmailAndPassword(auth, email, password);
         toast({ title: "Login Successful" });
-        router.push(role === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
+        router.push(selectedRole === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
       }
     } catch (error: any) {
       toast({
@@ -94,9 +104,9 @@ export default function Home() {
             <form onSubmit={(e) => handleAuth(e, false)}>
               <CardContent className="space-y-4 relative z-10">
                 <div className="space-y-2">
-                  <Label htmlFor="role">I am a</Label>
-                  <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger id="role" className="w-full">
+                  <Label htmlFor="role-login">I am a</Label>
+                  <Select name="role" value={role} onValueChange={setRole}>
+                    <SelectTrigger id="role-login" className="w-full">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -142,7 +152,7 @@ export default function Home() {
               <CardContent className="space-y-4 relative z-10">
                 <div className="space-y-2">
                   <Label htmlFor="role-register">I am a</Label>
-                  <Select value={role} onValueChange={setRole}>
+                  <Select name="role" value={role} onValueChange={setRole}>
                     <SelectTrigger id="role-register" className="w-full">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
