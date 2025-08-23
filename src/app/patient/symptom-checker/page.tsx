@@ -14,8 +14,8 @@ export default function SymptomCheckerPage() {
             </div>
             <div>
               <CardTitle>AI-Powered Symptom Checker</CardTitle>
-              <CardDescription>
-                Describe your symptoms, and our AI will provide potential insights. 
+              <CardDescription>Receive potential insights based on your health data, including symptoms, history, and reports.
+
                 <strong className="block">This is not a medical diagnosis.</strong> Always consult a healthcare professional.
               </CardDescription>
             </div>

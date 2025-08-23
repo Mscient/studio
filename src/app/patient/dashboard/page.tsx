@@ -1,13 +1,27 @@
+
+"use client";
+
 import { AppLayout } from "@/components/app-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video } from "lucide-react";
+import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Bot } from "lucide-react";
+import QRCode from "qrcode.react";
+import { useEffect, useState } from "react";
+
 
 export default function PatientDashboard() {
+  const [profileUrl, setProfileUrl] = useState('');
+
+  useEffect(() => {
+    // In a real app, you would fetch the user's unique ID
+    const userId = "alex-murray-123"; 
+    setProfileUrl(`${window.location.origin}/patient/profile/${userId}`);
+  }, []);
+
   return (
     <AppLayout userType="patient">
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
@@ -71,6 +85,26 @@ export default function PatientDashboard() {
         </div>
 
         <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <QrCode />
+                Share Profile
+              </CardTitle>
+              <CardDescription>
+                Show this QR code to your doctor to share your health profile instantly.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center">
+              {profileUrl ? (
+                <div className="p-4 bg-white rounded-lg">
+                  <QRCode value={profileUrl} size={160} />
+                </div>
+              ) : (
+                <div className="w-40 h-40 bg-muted rounded-lg animate-pulse" />
+              )}
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Upcoming Appointments</CardTitle>
