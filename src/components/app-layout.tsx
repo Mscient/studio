@@ -192,31 +192,32 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
         </nav>
       </aside>
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:justify-between sm:border-0 sm:bg-transparent sm:px-6">
-          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="outline" className="sm:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle Menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="sm:max-w-xs p-0">
-               <div className="flex h-14 items-center justify-between border-b px-4">
-                 <Link
-                    href="/"
-                    className="flex items-center gap-2 font-semibold"
-                >
-                    <AppLogo className="h-6 w-6 text-primary" />
-                    <span>HealthVision</span>
-                </Link>
-              </div>
-              <NavContent isMobile={true} />
-            </SheetContent>
-          </Sheet>
-
-          <div className="hidden items-center gap-2 sm:flex">
-            <AppLogo className="h-7 w-7 text-primary" />
-            <h1 className="text-xl font-semibold text-primary">HealthVision</h1>
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:justify-end sm:border-0 sm:bg-transparent sm:px-6">
+          <div className="flex items-center gap-2">
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button size="icon" variant="outline" className="sm:hidden">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="sm:max-w-xs p-0">
+                <div className="flex h-14 items-center justify-between border-b px-4">
+                    <Link
+                        href="/"
+                        className="flex items-center gap-2 font-semibold"
+                    >
+                        <AppLogo className="h-6 w-6 text-primary" />
+                        <span>HealthVision</span>
+                    </Link>
+                </div>
+                <NavContent isMobile={true} />
+              </SheetContent>
+            </Sheet>
+            <Link href="/" className="flex items-center gap-2 font-semibold">
+                <AppLogo className="h-7 w-7 text-primary" />
+                <h1 className="text-xl font-semibold text-primary">HealthVision</h1>
+            </Link>
           </div>
 
           <DropdownMenu>
