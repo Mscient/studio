@@ -43,10 +43,9 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
               age: data.age || 0,
               phone: data.phone || "N/A",
               gender: data.gender || "N/A",
-              // Mocking data not yet in firestore
-              bloodType: data.bloodType || "O+",
-              allergies: data.allergies || ["Peanuts", "Pollen"],
-              conditions: data.conditions || ["Hypertension", "Asthma"],
+              bloodType: data.bloodType || "Not specified",
+              allergies: data.allergies || [],
+              conditions: data.conditions || [],
               avatarHint: data.avatarHint || "person",
           });
         } else {
@@ -147,14 +146,18 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
                             <div>
                                 <span className="text-muted-foreground">Allergies</span>
                                 <div className="flex flex-wrap gap-1 mt-1">
-                                    {patient.allergies.map(allergy => <Badge key={allergy} variant="secondary">{allergy}</Badge>)}
+                                    {patient.allergies.length > 0 ? 
+                                      patient.allergies.map(allergy => <Badge key={allergy} variant="secondary">{allergy}</Badge>) :
+                                      <p className="text-sm font-medium">None reported</p>}
                                 </div>
                             </div>
                             <Separator />
                             <div>
                                 <span className="text-muted-foreground">Existing Conditions</span>
                                 <div className="flex flex-wrap gap-1 mt-1">
-                                     {patient.conditions.map(condition => <Badge key={condition} variant="outline">{condition}</Badge>)}
+                                     {patient.conditions.length > 0 ?
+                                       patient.conditions.map(condition => <Badge key={condition} variant="outline">{condition}</Badge>) :
+                                       <p className="text-sm font-medium">None reported</p>}
                                 </div>
                             </div>
                         </CardContent>

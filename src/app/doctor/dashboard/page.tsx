@@ -10,7 +10,7 @@ import { FilePlus, MessageSquare, QrCode, Users, Siren, Lightbulb, Sparkles, Tri
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 
@@ -46,15 +46,12 @@ export default function DoctorDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAppointments = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const q = query(collection(db, "appointments"), where("date", "==", today));
+    
+    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
         setLoading(true);
-        
-        const today = new Date().toISOString().split('T')[0];
-        const q = query(collection(db, "appointments"), where("date", "==", today));
-        
-        const appointmentSnapshot = await getDocs(q);
-        
-        const appointmentsList = await Promise.all(appointmentSnapshot.docs.map(async (appointmentDoc) => {
+        const appointmentsList = await Promise.all(querySnapshot.docs.map(async (appointmentDoc) => {
             const appointmentData = appointmentDoc.data();
             
             let patientName = "Unknown Patient";
@@ -72,15 +69,18 @@ export default function DoctorDashboard() {
                 time: appointmentData.time,
                 status: appointmentData.status,
                 type: appointmentData.type,
-                urgency: appointmentData.urgency,
+                urgency: appointmentData.urgency || "routine",
             };
         }));
         
-        setAppointments(appointmentsList.slice(0, 4)); // Limiting to 4 for the dashboard view
+        setAppointments(appointmentsList.slice(0, 4));
         setLoading(false);
-    };
+    }, (error) => {
+        console.error("Error fetching appointments in real-time: ", error);
+        setLoading(false);
+    });
 
-    fetchAppointments();
+    return () => unsubscribe();
   }, []);
 
   return (
