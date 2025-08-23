@@ -13,6 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Stethoscope, User, Calendar, Pill, Clock, ShieldCheck, Info } from "lucide-react";
 
@@ -25,6 +26,8 @@ const prescriptions = [
     patientAge: 28,
     diagnosis: "Viral Upper Respiratory Infection (Common Cold + Mild Fever)",
     date: "2024-07-28",
+    avatarUrl: "https://i.ibb.co/9TRmR6C/female-doctor-smiling.jpg",
+    avatarHint: "female doctor smiling",
     medicines: [
       {
         name: "Paracetamol 500 mg",
@@ -60,6 +63,8 @@ const prescriptions = [
     patientAge: 52,
     diagnosis: "Type 2 Diabetes Mellitus + Hypertension",
     date: "2024-07-25",
+    avatarUrl: "https://placehold.co/40x40.png",
+    avatarHint: "male doctor",
     medicines: [
       {
         name: "Metformin 500 mg",
@@ -117,19 +122,23 @@ export default function PrescriptionsPage() {
           {prescriptions.map((prescription) => (
             <Card key={prescription.id} className="shadow-lg">
               <CardHeader>
-                <div className="flex flex-col sm:flex-row justify-between gap-2 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Stethoscope className="w-4 h-4" />
-                    <p>
-                      <span className="font-semibold text-foreground">{prescription.doctor}</span> ({prescription.doctorSpecialty})
-                    </p>
+                <div className="flex flex-col sm:flex-row justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                     <Avatar className="w-12 h-12">
+                        <AvatarImage src={prescription.avatarUrl} data-ai-hint={prescription.avatarHint}/>
+                        <AvatarFallback>{prescription.doctor.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold text-foreground">{prescription.doctor}</p>
+                      <p className="text-sm text-muted-foreground">({prescription.doctorSpecialty})</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm self-start sm:self-center">
                     <Calendar className="w-4 h-4" />
                     <span>{new Date(prescription.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                   </div>
                 </div>
-                 <div className="flex items-center gap-2 pt-2 text-muted-foreground text-sm">
+                 <div className="flex items-center gap-2 pt-4 text-muted-foreground text-sm">
                     <User className="w-4 h-4" />
                     <p>
                       Patient: <span className="font-semibold text-foreground">{prescription.patient}</span> (Age: {prescription.patientAge})
