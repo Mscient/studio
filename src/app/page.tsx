@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLogo } from '@/components/app-logo';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
@@ -88,47 +88,6 @@ export default function Home() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-
-        let userRole = 'patient';
-
-        if (!userDocSnap.exists()) {
-            // New user, create a document for them. 'role' is from the state selector.
-            await setDoc(userDocRef, {
-                uid: user.uid,
-                name: user.displayName,
-                email: user.email,
-                role: role,
-                createdAt: new Date(),
-            });
-            userRole = role;
-        } else {
-            // Existing user
-            userRole = userDocSnap.data().role;
-        }
-
-        toast({ title: "Google Sign-In Successful" });
-        router.push(userRole === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
-
-    } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Google Sign-In Failed",
-            description: error.message,
-        });
-    } finally {
-        setLoading(false);
-    }
-  };
-
   if (showSplash) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-background">
@@ -183,10 +142,6 @@ export default function Home() {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Logging in...' : 'Login'} <ChevronsRight className="ml-2 h-4 w-4" />
                 </Button>
-                 <p className="text-center text-sm text-muted-foreground">Or continue with</p>
-                <div className="grid grid-cols-1 gap-4">
-                    <Button variant="outline" type="button" onClick={handleGoogleSignIn} disabled={loading}>Google</Button>
-                </div>
               </CardFooter>
             </form>
           </TabsContent>
@@ -259,10 +214,6 @@ export default function Home() {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Registering...' : 'Register'} <ChevronsRight className="ml-2 h-4 w-4" />
                 </Button>
-                 <p className="text-center text-sm text-muted-foreground">Or continue with</p>
-                <div className="grid grid-cols-1 gap-4">
-                    <Button variant="outline" type="button" onClick={handleGoogleSignIn} disabled={loading}>Google</Button>
-                </div>
               </CardFooter>
             </form>
           </TabsContent>
@@ -274,5 +225,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
