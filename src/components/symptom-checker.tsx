@@ -49,32 +49,33 @@ const UrgencyMap = {
   },
 };
 
-const FileInput = ({ field, label }: { field: any; label: string }) => {
+const FileInput = ({ field, label, icon }: { field: any; label: string, icon: React.ReactNode }) => {
     const [fileName, setFileName] = useState<string | null>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
-            setFileName(e.target.files[0].name);
+            const file = e.target.files[0];
+            setFileName(file.name);
             // In a real app, you'd handle the file upload here and set the field value to the file path or ID.
-            // For now, we'll just store the name for display.
-            field.onChange(e.target.files[0].name);
+            // For this demo, we'll just store the name for display and to pass to the AI flow.
+            field.onChange(file.name);
         }
     };
     
     return (
         <FormItem>
-            <FormLabel className="flex items-center gap-2">{label}</FormLabel>
+            <FormLabel className="flex items-center gap-2">{icon} {label}</FormLabel>
             <FormControl>
-                <div className="relative">
-                    <Input
-                        type="text"
-                        readOnly
-                        placeholder={fileName ? "" : "Click to upload a file (e.g., PDF, JPG)"}
-                        value={fileName || ""}
-                        className="cursor-pointer"
+                 <div className="relative">
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="w-full justify-start font-normal text-muted-foreground"
                         onClick={() => document.getElementById(field.name)?.click()}
-                    />
-                    {fileName && <p className="text-sm p-2 text-foreground">{fileName}</p>}
+                    >
+                        {fileName || "Click to upload a file (e.g., PDF, JPG)"}
+                    </Button>
+                    {fileName && <p className="text-xs p-2 text-foreground truncate">{fileName}</p>}
                     <FileUp className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
             </FormControl>
@@ -158,7 +159,7 @@ export default function SymptomChecker() {
                 control={form.control}
                 name="labReport"
                 render={({ field }) => (
-                   <FileInput field={field} label={<><FileText /> Lab Report Details</>}/>
+                   <FileInput field={field} label="Lab Report Details" icon={<FileText />}/>
                 )}
               />
 
@@ -166,7 +167,7 @@ export default function SymptomChecker() {
                 control={form.control}
                 name="prescription"
                 render={({ field }) => (
-                  <FileInput field={field} label={<><Pill/> Current Medications</>}/>
+                  <FileInput field={field} label="Current Medications" icon={<Pill/>}/>
                 )}
               />
 
