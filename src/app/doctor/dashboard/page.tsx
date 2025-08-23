@@ -1,47 +1,27 @@
 
+'use client';
+
 import { AppLayout } from "@/components/app-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FilePlus, MessageSquare, QrCode, Users, Siren, Lightbulb, Sparkles, TriangleAlert } from "lucide-react";
+import { FilePlus, MessageSquare, QrCode, Users, Siren, Lightbulb, Sparkles, TriangleAlert, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-const appointments = [
-  {
-    id: "apt_1",
-    patient: "Liam Johnson",
-    time: "9:00 AM - 9:30 AM",
-    status: "Confirmed",
-    type: "Video",
-    urgency: "routine"
-  },
-  {
-    id: "apt_2",
-    patient: "Olivia Smith",
-    time: "10:00 AM - 10:30 AM",
-    status: "Confirmed",
-    type: "In-Person",
-    urgency: "self_care"
-  },
-  {
-    id: "apt_3",
-    patient: "Noah Williams",
-    time: "11:00 AM - 11:30 AM",
-    status: "Pending",
-    type: "Video",
-    urgency: "urgent"
-  },
-    {
-    id: "apt_4",
-    patient: "Emma Brown",
-    time: "1:00 PM - 1:30 PM",
-    status: "Confirmed",
-    type: "Video",
-    urgency: "routine"
-  },
-]
+
+interface Appointment {
+  id: string;
+  patientName: string;
+  time: string;
+  status: string;
+  type: string;
+  urgency: "self_care" | "routine" | "urgent";
+}
 
 const UrgencyMap = {
   self_care: {
@@ -62,6 +42,47 @@ const UrgencyMap = {
 };
 
 export default function DoctorDashboard() {
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+        setLoading(true);
+        
+        const today = new Date().toISOString().split('T')[0];
+        const q = query(collection(db, "appointments"), where("date", "==", today));
+        
+        const appointmentSnapshot = await getDocs(q);
+        
+        const appointmentsList = await Promise.all(appointmentSnapshot.docs.map(async (appointmentDoc) => {
+            const appointmentData = appointmentDoc.data();
+            
+            let patientName = "Unknown Patient";
+            if (appointmentData.patientId) {
+                const patientDocRef = doc(db, 'users', appointmentData.patientId);
+                const patientDocSnap = await getDoc(patientDocRef);
+                if (patientDocSnap.exists()) {
+                    patientName = patientDocSnap.data().name;
+                }
+            }
+
+            return {
+                id: appointmentDoc.id,
+                patientName: patientName,
+                time: appointmentData.time,
+                status: appointmentData.status,
+                type: appointmentData.type,
+                urgency: appointmentData.urgency,
+            };
+        }));
+        
+        setAppointments(appointmentsList.slice(0, 4)); // Limiting to 4 for the dashboard view
+        setLoading(false);
+    };
+
+    fetchAppointments();
+  }, []);
+
   return (
     <AppLayout userType="doctor">
       <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
@@ -120,29 +141,39 @@ export default function DoctorDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {appointments.map(apt => (
-                    <TableRow key={apt.patient}>
-                      <TableCell>
-                        <div className="font-medium">{apt.patient}</div>
-                        <div className="text-sm text-muted-foreground">{apt.type}</div>
-                      </TableCell>
-                      <TableCell>{apt.time}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`flex items-center gap-2 ${UrgencyMap[apt.urgency as keyof typeof UrgencyMap].badgeClass}`}>
-                            {UrgencyMap[apt.urgency as keyof typeof UrgencyMap].icon}
-                            {UrgencyMap[apt.urgency as keyof typeof UrgencyMap].label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                         <Badge variant={apt.status === "Confirmed" ? "outline" : "destructive"}>{apt.status}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button size="sm" asChild>
-                          <Link href={`/doctor/appointments/${apt.id}`}>View</Link>
-                        </Button>
-                      </TableCell>
+                  {loading ? (
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-center">
+                            <div className="flex justify-center items-center p-4">
+                                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                            </div>
+                        </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    appointments.map(apt => (
+                      <TableRow key={apt.id}>
+                        <TableCell>
+                          <div className="font-medium">{apt.patientName}</div>
+                          <div className="text-sm text-muted-foreground">{apt.type}</div>
+                        </TableCell>
+                        <TableCell>{apt.time}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`flex items-center gap-2 ${UrgencyMap[apt.urgency].badgeClass}`}>
+                              {UrgencyMap[apt.urgency].icon}
+                              {UrgencyMap[apt.urgency].label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                           <Badge variant={apt.status === "Confirmed" ? "outline" : "destructive"}>{apt.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button size="sm" asChild>
+                            <Link href={`/doctor/appointments/${apt.id}`}>View</Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

@@ -1,4 +1,6 @@
 
+'use client';
+
 import { AppLayout } from "@/components/app-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -6,19 +8,48 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, UserPlus } from "lucide-react";
+import { Search, UserPlus, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-const patients = [
-  { id: "pat_1", name: "Liam Johnson", age: 34, lastVisit: "2024-07-29", status: "Active", profileId: "liam-johnson-1", avatarHint: "caucasian man" },
-  { id: "pat_2", name: "Olivia Smith", age: 28, lastVisit: "2024-07-29", status: "Active", profileId: "olivia-smith-2", avatarHint: "hispanic woman" },
-  { id: "pat_3", name: "Noah Williams", age: 45, lastVisit: "2024-07-20", status: "Active", profileId: "noah-williams-3", avatarHint: "black man" },
-  { id: "pat_4", name: "Emma Brown", age: 31, lastVisit: "2024-06-15", status: "Follow-up", profileId: "emma-brown-4", avatarHint: "caucasian woman" },
-  { id: "pat_5", name: "James Wilson", age: 52, lastVisit: "2024-05-01", status: "Stable", profileId: "james-wilson-5", avatarHint: "asian man" },
-  { id: "pat_6", name: "Ava Taylor", age: 22, lastVisit: "2023-12-10", status: "Inactive", profileId: "ava-taylor-6", avatarHint: "black woman" },
-];
+interface Patient {
+  id: string;
+  name: string;
+  age: number;
+  lastVisit: string; // This will remain mock data for now
+  status: string; // This will remain mock data for now
+  avatarHint: string;
+}
 
 export default function PatientsPage() {
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      setLoading(true);
+      const q = query(collection(db, "users"), where("role", "==", "patient"));
+      const querySnapshot = await getDocs(q);
+      const patientsData: Patient[] = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            name: data.name || "N/A",
+            age: data.age || 0,
+            lastVisit: "2024-07-29", // Mock data
+            status: "Active", // Mock data
+            avatarHint: data.avatarHint || 'person'
+        }
+      });
+      setPatients(patientsData);
+      setLoading(false);
+    };
+
+    fetchPatients();
+  }, []);
+
   return (
     <AppLayout userType="doctor">
       <Card>
@@ -49,31 +80,42 @@ export default function PatientsPage() {
                     </TableRow>
                 </TableHeader>
                  <TableBody>
-                    {patients.map(patient => (
-                        <TableRow key={patient.id}>
-                            <TableCell className="font-medium">
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="w-9 h-9">
-                                        <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint={patient.avatarHint}/>
-                                        <AvatarFallback>{patient.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                    </Avatar>
-                                    <span>{patient.name}</span>
+                    {loading ? (
+                         <TableRow>
+                            <TableCell colSpan={5} className="text-center">
+                                <div className="flex justify-center items-center p-4">
+                                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                    <span className="ml-2">Loading patients...</span>
                                 </div>
                             </TableCell>
-                            <TableCell>{patient.age}</TableCell>
-                            <TableCell>{patient.lastVisit}</TableCell>
-                            <TableCell>
-                                <Badge variant={patient.status === 'Active' ? 'default' : patient.status === 'Follow-up' ? 'secondary' : 'outline'}>
-                                    {patient.status}
-                                </Badge>
-                            </TableCell>
-                            <TableCell>
-                                <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/patient/profile/${patient.profileId}`}>View Profile</Link>
-                                </Button>
-                            </TableCell>
                         </TableRow>
-                    ))}
+                    ) : (
+                        patients.map(patient => (
+                            <TableRow key={patient.id}>
+                                <TableCell className="font-medium">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="w-9 h-9">
+                                            <AvatarImage src={`https://i.ibb.co/yPVRrG0/happy-man.png`} data-ai-hint={patient.avatarHint}/>
+                                            <AvatarFallback>{patient.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                        </Avatar>
+                                        <span>{patient.name}</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell>{patient.age}</TableCell>
+                                <TableCell>{patient.lastVisit}</TableCell>
+                                <TableCell>
+                                    <Badge variant={patient.status === 'Active' ? 'default' : patient.status === 'Follow-up' ? 'secondary' : 'outline'}>
+                                        {patient.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href={`/patient/profile/${patient.id}`}>View Profile</Link>
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))
+                    )}
                 </TableBody>
             </Table>
         </CardContent>

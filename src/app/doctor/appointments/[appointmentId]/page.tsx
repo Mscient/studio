@@ -7,47 +7,44 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, BrainCircuit, Briefcase, Calendar, FileText, HeartPulse, Lightbulb, Sparkles, TriangleAlert, User } from "lucide-react";
+import { ArrowLeft, BrainCircuit, Briefcase, FileText, HeartPulse, Lightbulb, Sparkles, TriangleAlert, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Mock data fetching, in a real app this would come from an API
-const getAppointmentDetails = (appointmentId: string) => {
-    // Mock patient data
-    const patient = {
-        name: "Liam Johnson",
-        age: 34,
-        email: "liam.j@example.com",
-        phone: "+1 (555) 234-5678",
-        bloodType: "A+",
-        allergies: ["Penicillin"],
-        conditions: ["Type 1 Diabetes"],
-    };
-
-    // Mock appointment data
-    const appointment = {
-        id: appointmentId,
-        patientName: patient.name,
-        time: "9:00 AM - 9:30 AM",
-        date: "2024-07-29",
-        type: "Video",
-        reason: "Routine check-up and prescription renewal for diabetes management."
-    };
-
-    // Mock AI Analysis data
-    const aiAnalysis = {
-        report: "The patient's described symptoms of fatigue and frequent urination, combined with wearable data showing elevated blood glucose levels, are consistent with their existing diagnosis of Type 1 Diabetes. The provided lab report confirms a recent HbA1c of 7.8%, which is higher than the target range, suggesting a need for adjustment in their insulin regimen. No new acute issues are immediately apparent from the provided data, but a consultation to discuss lifestyle factors and medication adherence is recommended.",
-        keyIndicators: {
-            bloodSugar: "180 mg/dL (avg)",
-            heartRate: "72 bpm (avg)",
-        },
-        urgency: "routine",
-        explanation: "Symptoms are consistent with a known chronic condition that needs ongoing management. No signs of acute distress are present.",
-    };
-    
-    return { patient, appointment, aiAnalysis };
+interface Patient {
+    name: string;
+    age: number;
+    email: string;
+    phone: string;
+    bloodType: string;
+    allergies: string[];
+    conditions: string[];
+    avatarHint: string;
 }
 
+interface Appointment {
+    id: string;
+    patientId: string;
+    patientName: string;
+    time: string;
+    date: string;
+    type: string;
+    reason: string;
+}
+
+interface AiAnalysis {
+    report: string;
+    keyIndicators: {
+        bloodSugar: string;
+        heartRate: string;
+    };
+    urgency: string;
+    explanation: string;
+}
 
 const UrgencyMap = {
   self_care: {
@@ -67,12 +64,93 @@ const UrgencyMap = {
   },
 };
 
-
 export default function AppointmentDetailsPage({ params }: { params: { appointmentId: string } }) {
-  const { patient, appointment, aiAnalysis } = getAppointmentDetails(params.appointmentId);
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<AiAnalysis | null>(null);
+  const [loading, setLoading] = useState(true);
   const routerParams = useParams();
   const appointmentId = typeof routerParams.appointmentId === 'string' ? routerParams.appointmentId : '';
 
+  useEffect(() => {
+    const fetchAppointmentDetails = async (id: string) => {
+        if (!id) return;
+        setLoading(true);
+
+        // Fetch appointment data
+        const appointmentRef = doc(db, 'appointments', id);
+        const appointmentSnap = await getDoc(appointmentRef);
+
+        if (!appointmentSnap.exists()) {
+            console.error("No such appointment!");
+            setLoading(false);
+            return;
+        }
+
+        const appointmentData = appointmentSnap.data();
+        const patientId = appointmentData.patientId;
+        
+        // Fetch patient data
+        const patientRef = doc(db, 'users', patientId);
+        const patientSnap = await getDoc(patientRef);
+        
+        if (!patientSnap.exists()) {
+             console.error("No such patient!");
+             setLoading(false);
+             return;
+        }
+        
+        const patientData = patientSnap.data();
+        const fetchedPatient = {
+            name: patientData.name,
+            age: patientData.age,
+            email: patientData.email,
+            phone: patientData.phone,
+            bloodType: patientData.bloodType || "A+", // Mock
+            allergies: patientData.allergies || ["Penicillin"], // Mock
+            conditions: patientData.conditions || ["Type 1 Diabetes"], // Mock
+            avatarHint: patientData.avatarHint || 'person'
+        };
+        setPatient(fetchedPatient);
+
+        const fetchedAppointment = {
+            id: appointmentSnap.id,
+            patientId: patientId,
+            patientName: fetchedPatient.name,
+            time: appointmentData.time,
+            date: appointmentData.date,
+            type: appointmentData.type,
+            reason: appointmentData.reason
+        };
+        setAppointment(fetchedAppointment);
+        
+        // Mock AI Analysis data
+        setAiAnalysis({
+            report: "The patient's described symptoms of fatigue and frequent urination, combined with wearable data showing elevated blood glucose levels, are consistent with their existing diagnosis of Type 1 Diabetes. The provided lab report confirms a recent HbA1c of 7.8%, which is higher than the target range, suggesting a need for adjustment in their insulin regimen. No new acute issues are immediately apparent from the provided data, but a consultation to discuss lifestyle factors and medication adherence is recommended.",
+            keyIndicators: {
+                bloodSugar: "180 mg/dL (avg)",
+                heartRate: "72 bpm (avg)",
+            },
+            urgency: appointmentData.urgency || "routine",
+            explanation: "Symptoms are consistent with a known chronic condition that needs ongoing management. No signs of acute distress are present.",
+        });
+
+        setLoading(false);
+    }
+    
+    fetchAppointmentDetails(appointmentId);
+
+  }, [appointmentId]);
+  
+  if (loading || !appointment || !patient || !aiAnalysis) {
+    return (
+        <AppLayout userType="doctor">
+            <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        </AppLayout>
+    )
+  }
 
   return (
     <AppLayout userType="doctor">
@@ -98,7 +176,7 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
                     <Card>
                         <CardHeader className="items-center p-4">
                              <Avatar className="w-20 h-20 border-4 border-primary">
-                                <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="man portrait"/>
+                                <AvatarImage src={`https://i.ibb.co/yPVRrG0/happy-man.png`} data-ai-hint={patient.avatarHint}/>
                                 <AvatarFallback>{patient.name.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
                             </Avatar>
                         </CardHeader>
@@ -106,7 +184,7 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
                             <h3 className="text-lg font-bold">{patient.name}</h3>
                             <p className="text-muted-foreground text-sm">Age: {patient.age}</p>
                             <Button variant="outline" size="sm" className="mt-3" asChild>
-                                <Link href={`/patient/profile/${appointmentId}`}>View Full Profile</Link>
+                                <Link href={`/patient/profile/${appointment.patientId}`}>View Full Profile</Link>
                             </Button>
                         </CardContent>
                     </Card>
