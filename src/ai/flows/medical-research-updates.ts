@@ -13,10 +13,13 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const MedicalResearchUpdateSchema = z.object({
-  title: z.string().describe('The title of the medical research article or news.'),
-  summary: z.string().describe('A concise summary of the research findings or news.'),
-  tags: z.array(z.string()).describe('A list of relevant tags (e.g., Cardiology, AI, Oncology).'),
+  title: z.string().describe('The compelling title of the medical research article or news.'),
+  summary: z.string().describe('A detailed summary of the research, explaining its background, methods, and importance.'),
+  keyFindings: z.array(z.string()).describe('A list of the most important, specific findings from the study.'),
+  implications: z.string().describe('Practical implications of the research for clinical practice or future studies.'),
+  tags: z.array(z.string()).describe('A list of relevant tags (e.g., Cardiology, AI, Oncology, Neurology).'),
   source: z.string().describe('A fictional source or journal for the research (e.g., "The Lancet AI", "Journal of Innovative Cardiology").'),
+  publicationDate: z.string().describe('A fictional publication date in "Month YYYY" format (e.g., "July 2024").'),
 });
 export type MedicalResearchUpdate = z.infer<typeof MedicalResearchUpdateSchema>;
 
@@ -31,11 +34,20 @@ export async function medicalResearchUpdates(): Promise<MedicalResearchUpdatesOu
 const medicalResearchUpdatesPrompt = ai.definePrompt({
   name: 'medicalResearchUpdatesPrompt',
   output: { schema: MedicalResearchUpdatesOutputSchema },
-  prompt: `You are an AI that summarizes recent, groundbreaking (but fictional) medical research for a community of doctors.
+  prompt: `You are an AI that creates detailed summaries of recent, groundbreaking (but fictional) medical research for a community of doctors.
 
-  Generate a list of 4 diverse and interesting medical research updates. Each update should include a compelling title, a clear summary of its importance, a fictional source, and relevant tags. The topics should be varied and cover different medical fields like oncology, AI in medicine, cardiology, neurology, etc.
+  Generate a list of 4 diverse and interesting medical research updates. Each update must be a rich, valuable resource.
   
-  The output must be in JSON format.
+  For each update, provide:
+  1. A compelling title.
+  2. A detailed summary covering the study's background, methodology, and significance.
+  3. A bulleted list of key findings.
+  4. A section on the practical implications for clinicians.
+  5. A fictional, recent publication date (e.g., "July 2024").
+  6. A fictional source (e.g., "The Lancet AI").
+  7. Relevant tags (e.g., Cardiology, AI in Medicine, Oncology).
+  
+  The topics should be varied and cover different medical fields. The output must be in JSON format.
   `,
 });
 

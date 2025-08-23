@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, MessageSquare, ThumbsUp, BrainCircuit, Share2, Plus } from 'lucide-react';
+import { Loader2, MessageSquare, ThumbsUp, BrainCircuit, Share2, Plus, Calendar, CheckCircle, FlaskConical } from 'lucide-react';
 import { getMedicalResearchUpdates } from '@/lib/actions';
 import type { MedicalResearchUpdate } from '@/ai/flows/medical-research-updates';
 
@@ -45,7 +45,7 @@ export default function CommunityPage() {
           </CardHeader>
         </Card>
         
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-6 items-start">
             <div className="md:col-span-2 space-y-6">
                 <h2 className="text-2xl font-bold">Latest Research & News</h2>
                 {loading ? (
@@ -56,24 +56,40 @@ export default function CommunityPage() {
                     updates.map((post) => (
                         <Card key={post.title} className="overflow-hidden">
                             <CardHeader>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-start gap-3">
                                     <Avatar>
                                         <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="research institute logo"/>
                                         <AvatarFallback>AI</AvatarFallback>
                                     </Avatar>
-                                    <div>
+                                    <div className="w-full">
                                         <CardTitle className="!text-xl">{post.title}</CardTitle>
-                                        <p className="text-sm text-muted-foreground">
-                                            Posted by AI Research Bot
-                                        </p>
+                                        <div className="flex justify-between w-full text-sm text-muted-foreground mt-1">
+                                            <span>From: <strong>{post.source}</strong></span>
+                                            <span className='flex items-center gap-1'><Calendar className='w-4 h-4'/> {post.publicationDate}</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2 pt-2">
                                 {post.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
                                 </div>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="space-y-6">
                                 <p className="text-muted-foreground">{post.summary}</p>
+                                
+                                <div>
+                                    <h4 className="font-semibold flex items-center gap-2 mb-2"><FlaskConical className='w-5 h-5 text-primary'/> Key Findings</h4>
+                                    <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                                        {post.keyFindings.map((finding, index) => (
+                                            <li key={index}>{finding}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 className="font-semibold flex items-center gap-2 mb-2"><CheckCircle className='w-5 h-5 text-primary'/> Clinical Implications</h4>
+                                    <p className="text-sm text-muted-foreground">{post.implications}</p>
+                                </div>
+
                             </CardContent>
                             <CardFooter className="bg-muted/50 p-2 flex justify-around">
                                 <Button variant="ghost" size="sm"><ThumbsUp className="mr-2"/> Like</Button>
