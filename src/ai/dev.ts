@@ -1,6 +1,8 @@
+
 import { config } from 'dotenv';
 config();
 
 import '@/ai/flows/symptom-analysis.ts';
 import '@/ai/flows/detailed-analysis.ts';
 import '@/ai/flows/prescription-suggestion.ts';
+import '@/ai/flows/medical-research-updates.ts';
