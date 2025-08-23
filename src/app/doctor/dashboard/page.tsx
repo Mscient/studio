@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FilePlus, MessageSquare, QrCode, Users, Siren } from "lucide-react";
+import { FilePlus, MessageSquare, QrCode, Users, Siren, Lightbulb, Sparkles, TriangleAlert } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -14,30 +14,52 @@ const appointments = [
     patient: "Liam Johnson",
     time: "9:00 AM - 9:30 AM",
     status: "Confirmed",
-    type: "Video"
+    type: "Video",
+    urgency: "routine"
   },
   {
     id: "apt_2",
     patient: "Olivia Smith",
     time: "10:00 AM - 10:30 AM",
     status: "Confirmed",
-    type: "In-Person"
+    type: "In-Person",
+    urgency: "self_care"
   },
   {
     id: "apt_3",
     patient: "Noah Williams",
     time: "11:00 AM - 11:30 AM",
     status: "Pending",
-    type: "Video"
+    type: "Video",
+    urgency: "urgent"
   },
     {
     id: "apt_4",
     patient: "Emma Brown",
     time: "1:00 PM - 1:30 PM",
     status: "Confirmed",
-    type: "Video"
+    type: "Video",
+    urgency: "routine"
   },
 ]
+
+const UrgencyMap = {
+  self_care: {
+    label: "Self-Care",
+    icon: <Lightbulb className="h-4 w-4 text-green-700" />,
+    badgeClass: "bg-green-100 text-green-800 border-green-200"
+  },
+  routine: {
+    label: "Routine",
+    icon: <Sparkles className="h-4 w-4 text-yellow-700" />,
+    badgeClass: "bg-yellow-100 text-yellow-800 border-yellow-200"
+  },
+  urgent: {
+    label: "Urgent",
+    icon: <TriangleAlert className="h-4 w-4 text-red-700" />,
+    badgeClass: "bg-red-100 text-red-800 border-red-200"
+  },
+};
 
 export default function DoctorDashboard() {
   return (
@@ -83,7 +105,7 @@ export default function DoctorDashboard() {
             <CardHeader>
               <CardTitle>Today's Appointments</CardTitle>
               <CardDescription>
-                Here are the appointments scheduled for today.
+                Here are the appointments scheduled for today, with AI-assessed urgency levels.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -92,7 +114,7 @@ export default function DoctorDashboard() {
                   <TableRow>
                     <TableHead>Patient</TableHead>
                     <TableHead>Time</TableHead>
-                    <TableHead>Type</TableHead>
+                    <TableHead>AI Urgency</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Action</TableHead>
                   </TableRow>
@@ -102,10 +124,14 @@ export default function DoctorDashboard() {
                     <TableRow key={apt.patient}>
                       <TableCell>
                         <div className="font-medium">{apt.patient}</div>
+                        <div className="text-sm text-muted-foreground">{apt.type}</div>
                       </TableCell>
                       <TableCell>{apt.time}</TableCell>
                       <TableCell>
-                        <Badge variant={apt.type === "Video" ? "default" : "secondary"}>{apt.type}</Badge>
+                        <Badge variant="outline" className={`flex items-center gap-2 ${UrgencyMap[apt.urgency as keyof typeof UrgencyMap].badgeClass}`}>
+                            {UrgencyMap[apt.urgency as keyof typeof UrgencyMap].icon}
+                            {UrgencyMap[apt.urgency as keyof typeof UrgencyMap].label}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                          <Badge variant={apt.status === "Confirmed" ? "outline" : "destructive"}>{apt.status}</Badge>
