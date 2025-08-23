@@ -86,7 +86,7 @@ export default function Home() {
         setLoading(false);
     }
   };
-
+  
   if (showSplash) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-background">
@@ -224,3 +224,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
