@@ -47,17 +47,17 @@ const UrgencyMap = {
   self_care: {
     label: "Self-Care",
     icon: <Lightbulb className="h-4 w-4 text-green-700" />,
-    badgeClass: "bg-green-100 text-green-800 border-green-200"
+    badgeClass: "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
   },
   routine: {
     label: "Routine",
-    icon: <Sparkles className="h-4 w-4 text-yellow-700" />,
-    badgeClass: "bg-yellow-100 text-yellow-800 border-yellow-200"
+    icon: <Sparkles className="h-4 w-4 text-amber-700" />,
+    badgeClass: "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100"
   },
   urgent: {
     label: "Urgent",
     icon: <TriangleAlert className="h-4 w-4 text-red-700" />,
-    badgeClass: "bg-red-100 text-red-800 border-red-200"
+    badgeClass: "bg-red-100 text-red-800 border-red-200 hover:bg-red-100"
   },
 };
 
