@@ -7,9 +7,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, MessageSquare, ThumbsUp, BrainCircuit, Share2, Plus, Calendar, CheckCircle, FlaskConical } from 'lucide-react';
+import { Loader2, MessageSquare, ThumbsUp, BrainCircuit, Share2, Plus, Calendar, CheckCircle, FlaskConical, Users, Vote, PlusCircle } from 'lucide-react';
 import { getMedicalResearchUpdates } from '@/lib/actions';
 import type { MedicalResearchUpdate } from '@/ai/flows/medical-research-updates';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+const myGroups = [
+  { id: 1, name: "Cardiology Case Studies", members: 45, description: "Discussing complex cardiology cases." },
+  { id: 2, name: "AI in Medicine Innovators", members: 120, description: "Exploring the frontier of AI in healthcare." },
+  { id: 3, name: "Pediatric Peer Support", members: 78, description: "A group for pediatric specialists." },
+];
 
 export default function CommunityPage() {
   const [updates, setUpdates] = useState<MedicalResearchUpdate[]>([]);
@@ -103,18 +111,44 @@ export default function CommunityPage() {
             <div className="space-y-6">
                  <Card>
                     <CardHeader>
-                        <CardTitle>My Groups</CardTitle>
+                        <CardTitle className='flex items-center justify-between'>
+                            <span>My Groups</span>
+                            <Button variant="ghost" size="icon"><PlusCircle className='w-5 h-5 text-muted-foreground'/></Button>
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">This feature is under construction.</p>
+                    <CardContent className='space-y-3'>
+                        {myGroups.map(group => (
+                             <div key={group.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50">
+                                <div className='p-2 bg-secondary rounded-md'>
+                                    <Users className='w-5 h-5 text-secondary-foreground'/>
+                                </div>
+                                <div>
+                                    <p className="font-semibold">{group.name}</p>
+                                    <p className="text-xs text-muted-foreground">{group.members} members</p>
+                                </div>
+                            </div>
+                        ))}
                     </CardContent>
                 </Card>
                  <Card>
                     <CardHeader>
-                        <CardTitle>Create a Poll</CardTitle>
+                        <CardTitle className='flex items-center gap-2'><Vote/> Create a Poll</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">This feature is under construction.</p>
+                    <CardContent className='space-y-4'>
+                        <div className='space-y-2'>
+                            <Label htmlFor="poll-question">Poll Question</Label>
+                            <Input id="poll-question" placeholder="e.g., What's the best approach for...?"/>
+                        </div>
+                         <div className='space-y-2'>
+                            <Label htmlFor="poll-option1">Option 1</Label>
+                            <Input id="poll-option1" placeholder="Enter option 1"/>
+                        </div>
+                          <div className='space-y-2'>
+                            <Label htmlFor="poll-option2">Option 2</Label>
+                            <Input id="poll-option2" placeholder="Enter option 2"/>
+                        </div>
+                        <Button variant="outline" size="sm" className='w-full'><Plus className='mr-2'/> Add Option</Button>
+                        <Button className='w-full'>Post Poll</Button>
                     </CardContent>
                 </Card>
             </div>
