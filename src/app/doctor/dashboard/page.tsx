@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FilePlus, MessageSquare, QrCode, Users } from "lucide-react";
+import { FilePlus, MessageSquare, QrCode, Users, Siren } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -64,12 +64,12 @@ export default function DoctorDashboard() {
           </Card>
            <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Pending Requests</CardDescription>
-              <CardTitle className="text-4xl">3</CardTitle>
+              <CardDescription>Emergency Requests</CardDescription>
+              <CardTitle className="text-4xl">5</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-xs text-muted-foreground">
-                Respond to them now
+                <Link href="/doctor/emergency" className="hover:underline">View critical needs</Link>
               </div>
             </CardContent>
           </Card>

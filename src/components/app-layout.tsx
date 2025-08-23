@@ -21,6 +21,7 @@ import {
   QrCode,
   FilePlus,
   MessageSquare,
+  Siren,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,7 @@ const doctorNavItems: NavItem[] = [
   { href: "/doctor/write-prescription", icon: FilePlus, label: "Write Prescription" },
   { href: "/doctor/scan-qr", icon: QrCode, label: "Scan Patient QR" },
   { href: "/doctor/community", icon: MessageSquare, label: "Community" },
+  { href: "/doctor/emergency", icon: Siren, label: "Emergency" },
 ];
 
 export function AppLayout({ children, userType }: AppLayoutProps) {
