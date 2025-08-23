@@ -10,8 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, UserPlus, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 interface Patient {
   id: string;
@@ -20,30 +18,27 @@ interface Patient {
   avatarHint: string;
 }
 
+const samplePatients: Patient[] = [
+    { id: '1', name: 'John Doe', age: 45, avatarHint: 'man glasses' },
+    { id: '2', name: 'Jane Smith', age: 34, avatarHint: 'woman professional' },
+    { id: '3', name: 'Peter Jones', age: 28, avatarHint: 'young man' },
+    { id: '4', name: 'Mary Williams', age: 52, avatarHint: 'older woman smiling' },
+    { id: '5', name: 'David Brown', age: 67, avatarHint: 'senior man' },
+];
+
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      setLoading(true);
-      const q = query(collection(db, "users"), where("role", "==", "patient"));
-      const querySnapshot = await getDocs(q);
-      const patientsData: Patient[] = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-            id: doc.id,
-            name: data.name || "N/A",
-            age: data.age || 0,
-            avatarHint: data.avatarHint || 'person'
-        }
-      });
-      setPatients(patientsData);
-      setLoading(false);
-    };
-
-    fetchPatients();
-  }, []);
+    setLoading(true);
+    setTimeout(() => {
+        const filteredPatients = samplePatients.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        setPatients(filteredPatients);
+        setLoading(false);
+    }, 300);
+  }, [searchTerm]);
 
   return (
     <AppLayout userType="doctor">
@@ -60,7 +55,12 @@ export default function PatientsPage() {
           </div>
            <div className="relative mt-4">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search patients by name..." className="pl-10" />
+                <Input 
+                    placeholder="Search patients by name..." 
+                    className="pl-10" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
             </div>
         </CardHeader>
         <CardContent className="p-0">

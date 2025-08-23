@@ -9,9 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, CheckCircle, Clock, Video, XCircle, Bell, Star, Loader2 } from "lucide-react";
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '@/lib/firebase';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { useEffect, useState } from "react";
 
 interface Appointment {
@@ -27,66 +24,31 @@ interface Appointment {
   status: "Confirmed" | "Completed" | "Cancelled";
 }
 
+const sampleAppointments: Appointment[] = [
+    { id: '1', doctorId: '1', doctorName: 'Dr. Emily Carter', doctorSpecialty: 'Cardiologist', doctorAvatarHint: 'doctor professional woman', doctorRating: 4.9, date: '2024-08-05', time: '10:00 AM', type: 'Video', status: 'Confirmed' },
+    { id: '2', doctorId: '2', doctorName: 'Dr. Ben Hanson', doctorSpecialty: 'Dermatologist', doctorAvatarHint: 'doctor professional man', doctorRating: 4.8, date: '2024-08-10', time: '02:30 PM', type: 'In-Person', status: 'Confirmed' },
+    { id: '3', doctorId: '3', doctorName: 'Dr. Sarah Lee', doctorSpecialty: 'Pediatrician', doctorAvatarHint: 'doctor friendly woman', doctorRating: 4.9, date: '2024-07-20', time: '11:00 AM', type: 'Video', status: 'Completed' },
+    { id: '4', doctorId: '1', doctorName: 'Dr. Emily Carter', doctorSpecialty: 'Cardiologist', doctorAvatarHint: 'doctor professional woman', doctorRating: 4.9, date: '2024-07-15', time: '09:00 AM', type: 'Video', status: 'Cancelled' },
+];
+
 export default function AppointmentsPage() {
   const { toast } = useToast();
-  const [user] = useAuthState(auth);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [pastAppointments, setPastAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAppointments = async () => {
-      if (!user) return;
-      setLoading(true);
-
-      const q = query(collection(db, "appointments"), where("patientId", "==", user.uid));
-      const querySnapshot = await getDocs(q);
-
-      const now = new Date();
-      const upcoming: Appointment[] = [];
-      const past: Appointment[] = [];
-
-      for (const docSnap of querySnapshot.docs) {
-          const data = docSnap.data();
-          const appointmentDate = new Date(`${data.date} ${data.time}`);
-          
-          let doctorData = { name: "Unknown Doctor", specialty: "N/A", avatarHint: "doctor professional", rating: 4.5 };
-          if (data.doctorId) {
-              const doctorRef = doc(db, 'users', data.doctorId);
-              const doctorSnap = await getDoc(doctorRef);
-              if (doctorSnap.exists()) {
-                  const d = doctorSnap.data();
-                  doctorData = { name: d.name, specialty: d.specialty || "General Physician", avatarHint: d.avatarHint, rating: d.rating || 4.5 };
-              }
-          }
-
-          const appointment: Appointment = {
-              id: docSnap.id,
-              doctorId: data.doctorId,
-              doctorName: doctorData.name,
-              doctorSpecialty: doctorData.specialty,
-              doctorAvatarHint: doctorData.avatarHint,
-              doctorRating: doctorData.rating,
-              date: data.date,
-              time: data.time,
-              type: data.type,
-              status: data.status,
-          };
-          
-          if (appointmentDate > now) {
-              upcoming.push(appointment);
-          } else {
-              past.push(appointment);
-          }
-      }
-      
-      setUpcomingAppointments(upcoming);
-      setPastAppointments(past);
-      setLoading(false);
-    };
-
-    fetchAppointments();
-  }, [user]);
+    setLoading(true);
+    // Simulate fetching and sorting data
+    setTimeout(() => {
+        const now = new Date();
+        const upcoming = sampleAppointments.filter(apt => new Date(apt.date) > now).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const past = sampleAppointments.filter(apt => new Date(apt.date) <= now).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setUpcomingAppointments(upcoming);
+        setPastAppointments(past);
+        setLoading(false);
+    }, 500);
+  }, []);
 
   const handleAction = (message: string) => {
     toast({

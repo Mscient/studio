@@ -22,9 +22,6 @@ import {
 } from 'lucide-react';
 import { getPrescriptionSuggestion } from '@/lib/actions';
 import { useToast } from "@/hooks/use-toast";
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, getDocs, query, where, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { Combobox } from '@/components/ui/combobox';
 
 const medicineSchema = z.object({
@@ -50,26 +47,22 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const samplePatients = [
+    { value: '1', label: 'John Doe', age: 45 },
+    { value: '2', label: 'Jane Smith', age: 34 },
+    { value: '3', label: 'Peter Jones', age: 28 },
+];
+
 export default function WritePrescriptionPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const [user] = useAuthState(auth);
   const [patients, setPatients] = useState<{ value: string; label: string; age: number }[]>([]);
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      const q = query(collection(db, "users"), where("role", "==", "patient"));
-      const querySnapshot = await getDocs(q);
-      const patientList = querySnapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
-          value: doc.id,
-          label: doc.data().name,
-          age: doc.data().age || 0,
-      }));
-      setPatients(patientList);
-    }
-    fetchPatients();
+    // Simulate fetching patients
+    setPatients(samplePatients);
   }, []);
 
   const form = useForm<FormValues>({
@@ -116,31 +109,17 @@ export default function WritePrescriptionPage() {
   };
 
   const onSubmit = async (data: FormValues) => {
-    if (!user) {
-      toast({ variant: 'destructive', title: "Error", description: "You must be logged in to save a prescription."});
-      return;
-    }
     setIsSubmitting(true);
-    try {
-      await addDoc(collection(db, "prescriptions"), {
-        ...data,
-        patientAge: Number(data.patientAge),
-        doctorId: user.uid,
-        date: new Date().toISOString().split('T')[0],
-        createdAt: serverTimestamp(),
-      });
-
-      toast({
-          title: "Prescription Saved",
-          description: "The new prescription has been saved successfully.",
-      });
-      form.reset();
-    } catch(e) {
-      console.error("Error saving prescription: ", e);
-      toast({ variant: 'destructive', title: "Save Failed", description: "There was an error saving the prescription."});
-    } finally {
-      setIsSubmitting(false);
-    }
+    console.log("Prescription Data:", data);
+    // Simulate saving data
+    setTimeout(() => {
+        toast({
+            title: "Prescription Saved",
+            description: "The new prescription has been saved successfully.",
+        });
+        form.reset();
+        setIsSubmitting(false);
+    }, 1000);
   };
 
   return (

@@ -10,9 +10,6 @@ import { FilePlus, MessageSquare, QrCode, Users, Siren, Lightbulb, Sparkles, Tri
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot, doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-
 
 interface Appointment {
   id: string;
@@ -22,6 +19,14 @@ interface Appointment {
   type: string;
   urgency: "self_care" | "routine" | "urgent";
 }
+
+const sampleAppointments: Appointment[] = [
+    { id: '1', patientName: 'John Doe', time: '10:00 AM', status: 'Confirmed', type: 'Video', urgency: 'urgent' },
+    { id: '2', patientName: 'Jane Smith', time: '11:30 AM', status: 'Confirmed', type: 'In-Person', urgency: 'routine' },
+    { id: '3', patientName: 'Peter Jones', time: '01:00 PM', status: 'Confirmed', type: 'Video', urgency: 'self_care' },
+    { id: '4', patientName: 'Mary Williams', time: '02:30 PM', status: 'Pending', type: 'Video', urgency: 'routine' },
+];
+
 
 const UrgencyMap = {
   self_care: {
@@ -46,41 +51,12 @@ export default function DoctorDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const q = query(collection(db, "appointments"), where("date", "==", today));
-    
-    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
-        setLoading(true);
-        const appointmentsList = await Promise.all(querySnapshot.docs.map(async (appointmentDoc) => {
-            const appointmentData = appointmentDoc.data();
-            
-            let patientName = "Unknown Patient";
-            if (appointmentData.patientId) {
-                const patientDocRef = doc(db, 'users', appointmentData.patientId);
-                const patientDocSnap = await getDoc(patientDocRef);
-                if (patientDocSnap.exists()) {
-                    patientName = patientDocSnap.data().name;
-                }
-            }
-
-            return {
-                id: appointmentDoc.id,
-                patientName: patientName,
-                time: appointmentData.time,
-                status: appointmentData.status,
-                type: appointmentData.type,
-                urgency: appointmentData.urgency || "routine",
-            };
-        }));
-        
-        setAppointments(appointmentsList.slice(0, 4));
+    setLoading(true);
+    // Simulate fetching data
+    setTimeout(() => {
+        setAppointments(sampleAppointments);
         setLoading(false);
-    }, (error) => {
-        console.error("Error fetching appointments in real-time: ", error);
-        setLoading(false);
-    });
-
-    return () => unsubscribe();
+    }, 500);
   }, []);
 
   return (

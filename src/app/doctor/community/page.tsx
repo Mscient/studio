@@ -15,8 +15,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 interface Group {
   id: string;
@@ -25,6 +23,12 @@ interface Group {
   description: string;
   avatarHint: string;
 }
+
+const sampleGroups: Group[] = [
+    { id: '1', name: 'Cardiology Experts', members: 128, description: 'Discussion group for cardiologists.', avatarHint: 'heartbeat cardiogram' },
+    { id: '2', name: 'Pediatric Care', members: 256, description: 'All things pediatrics.', avatarHint: 'baby toys' },
+    { id: '3', name: 'Neurology Insights', members: 92, description: 'Latest in neurology.', avatarHint: 'brain neurons' },
+];
 
 export default function CommunityPage() {
   const [updates, setUpdates] = useState<MedicalResearchUpdate[]>([]);
@@ -50,9 +54,8 @@ export default function CommunityPage() {
 
       const researchPromise = getMedicalResearchUpdates();
       const trendsPromise = getDailyHealthTrends();
-      const groupsPromise = getDocs(collection(db, 'groups'));
-
-      const [researchResult, trendsResult, groupsSnapshot] = await Promise.all([researchPromise, trendsPromise, groupsPromise]);
+      
+      const [researchResult, trendsResult] = await Promise.all([researchPromise, trendsPromise]);
 
       if (researchResult.success && researchResult.data) {
         setUpdates(researchResult.data);
@@ -64,9 +67,11 @@ export default function CommunityPage() {
       }
       setLoadingTrends(false);
 
-      const groupsList = groupsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Group));
-      setGroups(groupsList);
-      setLoadingGroups(false);
+      // Simulate fetching groups
+      setTimeout(() => {
+        setGroups(sampleGroups);
+        setLoadingGroups(false);
+      }, 500);
     };
     fetchData();
   }, [toast]);

@@ -15,8 +15,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { MoreHorizontal, PlusCircle, Siren, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { formatDistanceToNow } from 'date-fns';
 
 interface EmergencyRequest {
@@ -24,9 +22,15 @@ interface EmergencyRequest {
     type: string;
     location: string;
     urgency: "Critical" | "Urgent" | "High";
-    posted: any;
+    posted: Date;
     details: string;
 }
+
+const sampleRequests: EmergencyRequest[] = [
+    { id: '1', type: 'O- Negative Blood', location: 'City General Hospital', urgency: 'Critical', posted: new Date(Date.now() - 1000 * 60 * 5), details: 'Urgently need 2 units of O- negative blood for emergency surgery.' },
+    { id: '2', type: 'On-call Neurologist', location: 'St. Jude\'s Medical Center', urgency: 'Urgent', posted: new Date(Date.now() - 1000 * 60 * 30), details: 'Need immediate neurologist consultation for a stroke patient.' },
+    { id: '3', type: 'Pediatric Ventilator', location: 'Children\'s Hospital', urgency: 'High', posted: new Date(Date.now() - 1000 * 60 * 60 * 2), details: 'Looking for an available pediatric ventilator for a patient in respiratory distress.' },
+];
 
 const urgencyVariantMap = {
     "Critical": "destructive",
@@ -41,31 +45,26 @@ export default function EmergencyPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const q = query(collection(db, "emergencyRequests"), orderBy("posted", "desc"));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const requestsData: EmergencyRequest[] = [];
-        querySnapshot.forEach((doc) => {
-            requestsData.push({ id: doc.id, ...doc.data() } as EmergencyRequest);
-        });
-        setRequests(requestsData);
+    setLoading(true);
+    setTimeout(() => {
+        setRequests(sampleRequests);
         setLoading(false);
-    });
-
-    return () => unsubscribe();
+    }, 500);
   }, []);
 
   const handlePostRequest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const newRequest = {
+    const newRequest: EmergencyRequest = {
+        id: (requests.length + 1).toString(),
         type: formData.get("type") as string,
         location: formData.get("location") as string,
         urgency: formData.get("urgency") as "Critical" | "Urgent" | "High",
         details: formData.get("details") as string,
-        posted: serverTimestamp(),
+        posted: new Date(),
     };
     
-    await addDoc(collection(db, "emergencyRequests"), newRequest);
+    setRequests(prev => [newRequest, ...prev]);
 
     setIsNewRequestOpen(false);
     toast({
@@ -166,7 +165,7 @@ export default function EmergencyPage() {
                                     {req.urgency}
                                 </Badge>
                             </TableCell>
-                            <TableCell>{req.posted ? formatDistanceToNow(req.posted.toDate(), { addSuffix: true }) : 'Just now'}</TableCell>
+                            <TableCell>{formatDistanceToNow(req.posted, { addSuffix: true })}</TableCell>
                             <TableCell>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -188,7 +187,7 @@ export default function EmergencyPage() {
                                                             {req.urgency}
                                                         </Badge>
                                                         <p className="mt-2">Location: <strong>{req.location}</strong></p>
-                                                        <p>Posted: {req.posted ? formatDistanceToNow(req.posted.toDate(), { addSuffix: true }) : 'Just now'}</p>
+                                                        <p>Posted: {formatDistanceToNow(req.posted, { addSuffix: true })}</p>
                                                     </DialogDescription>
                                                 </DialogHeader>
                                                 <div className="py-4">

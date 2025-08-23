@@ -9,9 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Star, Video, Loader2 } from "lucide-react";
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 interface Doctor {
@@ -25,89 +22,48 @@ interface Doctor {
   isCurrent?: boolean;
 }
 
+const sampleDoctors: Doctor[] = [
+    { id: '1', name: 'Dr. Emily Carter', specialization: 'Cardiologist', rating: 4.9, status: 'Online', experience: '12 years', avatarHint: 'doctor professional woman' },
+    { id: '2', name: 'Dr. Ben Hanson', specialization: 'Dermatologist', rating: 4.8, status: 'Online', experience: '8 years', avatarHint: 'doctor professional man' },
+    { id: '3', name: 'Dr. Sarah Lee', specialization: 'Pediatrician', rating: 4.9, status: 'Offline', experience: '15 years', avatarHint: 'doctor friendly woman' },
+    { id: '4', name: 'Dr. Michael Chen', specialization: 'Neurologist', rating: 4.7, status: 'Offline', experience: '10 years', avatarHint: 'doctor serious man' },
+];
+
 export default function ConsultOnlinePage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [user] = useAuthState(auth);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingDoctor, setLoadingDoctor] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchDoctors = async () => {
-      setLoading(true);
-      const q = query(collection(db, "users"), where("role", "==", "doctor"));
-      const querySnapshot = await getDocs(q);
-      const doctorsData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          name: data.name,
-          specialization: data.specialization || 'General Physician',
-          rating: data.rating || 4.5,
-          status: data.status || 'Offline',
-          experience: data.experience || '5 years',
-          avatarHint: data.avatarHint || 'doctor professional',
-        }
-      });
-      // Sort doctors to show Online ones first
-      doctorsData.sort((a, b) => {
-        if (a.status === 'Online' && b.status !== 'Online') return -1;
-        if (a.status !== 'Online' && b.status === 'Online') return 1;
-        return 0;
-      });
-
-      setDoctors(doctorsData);
-      setLoading(false);
-    }
-    fetchDoctors();
+    setLoading(true);
+    // Simulate fetching and sorting data
+    setTimeout(() => {
+        const sortedDoctors = [...sampleDoctors].sort((a, b) => {
+            if (a.status === 'Online' && b.status !== 'Online') return -1;
+            if (a.status !== 'Online' && b.status === 'Online') return 1;
+            return 0;
+        });
+        setDoctors(sortedDoctors);
+        setLoading(false);
+    }, 500);
   }, []);
 
   const handleConsult = async (doctor: Doctor) => {
-    if (!user) {
-        toast({
-            variant: "destructive",
-            title: "Not Logged In",
-            description: "You must be logged in to start a consultation.",
-        });
-        return;
-    }
-
     setLoadingDoctor(doctor.id);
     
-    try {
-        const consultationRef = await addDoc(collection(db, "appointments"), {
-            patientId: user.uid,
-            doctorId: doctor.id,
-            doctorName: doctor.name,
-            patientName: user.displayName || "Patient",
-            status: "Confirmed",
-            type: "Video",
-            reason: "Online Consultation",
-            date: new Date().toISOString().split('T')[0],
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'}),
-            createdAt: serverTimestamp(),
-            meetCode: `healthvision-${Date.now()}`
-        });
-        
+    // Simulate API call
+    setTimeout(() => {
         toast({
             title: "Consultation Booked!",
             description: `Your video call with ${doctor.name} is starting.`,
         });
         
-        const meetUrl = `https://meet.google.com/lookup/healthvision-${consultationRef.id}`;
+        const meetUrl = `https://meet.google.com/lookup/healthvision-${doctor.id}-${Date.now()}`;
         window.open(meetUrl, '_blank');
-
-    } catch (error) {
-        console.error("Error booking consultation:", error);
-        toast({
-            variant: "destructive",
-            title: "Booking Failed",
-            description: "Could not initiate the consultation. Please try again.",
-        });
-    } finally {
         setLoadingDoctor(null);
-    }
+    }, 1000);
   };
   
   if (loading) {

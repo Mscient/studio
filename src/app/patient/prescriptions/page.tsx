@@ -15,9 +15,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Bell, Download, Printer, Loader2 } from "lucide-react";
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
 interface Medicine {
   name: string;
@@ -42,53 +39,36 @@ interface Prescription {
   medicines: Medicine[];
 }
 
+const samplePrescriptions: Prescription[] = [
+    {
+        id: 'presc1', doctorId: 'doc1', doctorName: 'Dr. Ben Hanson', doctorSpecialty: 'Dermatologist', doctorAvatarHint: 'doctor professional man', clinic: 'City Dermatology Clinic',
+        patientName: 'John Patient', patientAge: 32, diagnosis: 'Acne Vulgaris', date: '2024-07-25',
+        medicines: [
+            { name: 'Isotretinoin 20mg', brand: 'Accutane', dosage: '1 capsule', frequency: 'Once daily', duration: '6 months', purpose: 'To treat severe acne' },
+            { name: 'Clindamycin Phosphate 1%', brand: 'Cleocin T', dosage: 'Apply thin layer', frequency: 'Twice daily', duration: '3 months', purpose: 'Topical antibiotic for acne' },
+        ]
+    },
+    {
+        id: 'presc2', doctorId: 'doc2', doctorName: 'Dr. Emily Carter', doctorSpecialty: 'Cardiologist', doctorAvatarHint: 'doctor professional woman', clinic: 'Heartbeat Cardiology',
+        patientName: 'John Patient', patientAge: 32, diagnosis: 'Hypertension', date: '2024-06-15',
+        medicines: [
+            { name: 'Lisinopril 10mg', brand: 'Zestril', dosage: '1 tablet', frequency: 'Once daily', duration: 'Ongoing', purpose: 'To control high blood pressure' },
+        ]
+    },
+];
+
 export default function PrescriptionsPage() {
   const { toast } = useToast();
-  const [user] = useAuthState(auth);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPrescriptions = async () => {
-      if (!user) return;
-      setLoading(true);
-
-      const q = query(collection(db, 'prescriptions'), where('patientId', '==', user.uid));
-      const querySnapshot = await getDocs(q);
-
-      const prescriptionsData = await Promise.all(
-        querySnapshot.docs.map(async (docSnap) => {
-          const data = docSnap.data();
-          let doctorData = { name: "Dr. Unknown", specialty: "N/A", avatarHint: "doctor", clinic: "N/A" };
-          
-          if(data.doctorId) {
-            const doctorRef = doc(db, 'users', data.doctorId);
-            const doctorSnap = await getDoc(doctorRef);
-            if (doctorSnap.exists()) {
-              const d = doctorSnap.data();
-              doctorData = { name: d.name, specialty: d.specialty || 'General Physician', avatarHint: d.avatarHint, clinic: d.clinic || 'General Clinic' };
-            }
-          }
-
-          return {
-            id: docSnap.id,
-            ...data,
-            doctorName: doctorData.name,
-            doctorSpecialty: doctorData.specialty,
-            doctorAvatarHint: doctorData.avatarHint,
-            clinic: doctorData.clinic,
-          } as Prescription;
-        })
-      );
-
-      setPrescriptions(prescriptionsData);
-      setLoading(false);
-    };
-    
-    if (user) {
-        fetchPrescriptions();
-    }
-  }, [user]);
+    setLoading(true);
+    setTimeout(() => {
+        setPrescriptions(samplePrescriptions);
+        setLoading(false);
+    }, 500);
+  }, []);
 
   const handleSetReminder = (medicineName: string) => {
     if (!("Notification" in window)) {

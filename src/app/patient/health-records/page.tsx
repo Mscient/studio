@@ -12,9 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FilePlus, History, Pill, FileText as FileTextIcon, Loader2 } from "lucide-react";
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '@/lib/firebase';
-import { collection, addDoc, query, getDocs, doc, setDoc, where } from "firebase/firestore";
 
 interface HealthRecord {
     id: string;
@@ -25,46 +22,47 @@ interface HealthRecord {
     type: 'prescription' | 'lab_report' | 'treatment_history';
 }
 
+const sampleRecords: HealthRecord[] = [
+    { id: '1', name: 'Metformin 500mg', prescribedBy: 'Dr. Ben Hanson', date: '2024-07-10', type: 'prescription' },
+    { id: '2', name: 'Lisinopril 20mg', prescribedBy: 'Dr. Emily Carter', date: '2024-06-22', type: 'prescription' },
+    { id: '3', name: 'Annual Blood Panel', facility: 'General Hospital', date: '2024-05-15', type: 'lab_report' },
+    { id: '4', name: 'Cholesterol Check', facility: 'City Clinic', date: '2024-05-15', type: 'lab_report' },
+    { id: '5', name: 'Appendectomy', facility: 'St. Jude\'s Medical Center', date: '2015-03-20', type: 'treatment_history' },
+];
+
 export default function HealthRecordsPage() {
   const [records, setRecords] = useState<HealthRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [user] = useAuthState(auth);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchRecords = async () => {
-      if (!user) return;
-      setLoading(true);
-      const q = query(collection(db, `users/${user.uid}/healthRecords`));
-      const querySnapshot = await getDocs(q);
-      const recordsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as HealthRecord));
-      setRecords(recordsData);
+    setLoading(true);
+    // Simulate fetching data
+    setTimeout(() => {
+      setRecords(sampleRecords.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
       setLoading(false);
-    };
-
-    fetchRecords();
-  }, [user]);
+    }, 500);
+  }, []);
 
   const handleAddRecord = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!user) return;
-
+    
     const formData = new FormData(event.currentTarget);
     const type = formData.get('type') as HealthRecord['type'];
     const name = formData.get('name') as string;
     const facility = formData.get('facility') as string;
     const date = new Date().toISOString().split('T')[0];
 
-    const newRecord = {
+    const newRecord: HealthRecord = {
+      id: (records.length + 1).toString(),
       name,
       date,
       type,
       ...(type === 'prescription' ? { prescribedBy: facility } : { facility }),
     };
 
-    const docRef = await addDoc(collection(db, `users/${user.uid}/healthRecords`), newRecord);
-    setRecords(prev => [{ id: docRef.id, ...newRecord } as HealthRecord, ...prev]);
+    setRecords(prev => [newRecord, ...prev].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
 
     toast({
       title: "Record Added",
@@ -78,7 +76,7 @@ export default function HealthRecordsPage() {
       return (
         <div className="space-y-4">
             {filteredRecords.length > 0 ? (
-                filteredRecords.map((item, index) => (
+                filteredRecords.map((item) => (
                     <div key={item.id} className="flex justify-between items-start">
                     <div>
                         <p className="font-semibold">{item.name}</p>

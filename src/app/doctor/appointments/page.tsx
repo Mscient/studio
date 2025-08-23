@@ -10,8 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MoreHorizontal, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 interface Appointment {
     id: string;
@@ -23,44 +21,25 @@ interface Appointment {
     patientId: string;
 }
 
+const sampleAppointments: Appointment[] = [
+    { id: '1', patientName: 'John Doe', time: '10:00 AM', date: '2024-07-29', status: 'Confirmed', type: 'Video', patientId: '1' },
+    { id: '2', patientName: 'Jane Smith', time: '11:30 AM', date: '2024-07-29', status: 'Confirmed', type: 'In-Person', patientId: '2' },
+    { id: '3', patientName: 'Peter Jones', time: '01:00 PM', date: '2024-07-29', status: 'Confirmed', type: 'Video', patientId: '3' },
+    { id: '4', patientName: 'Mary Williams', time: '02:30 PM', date: '2024-07-30', status: 'Pending', type: 'Video', patientId: '4' },
+    { id: '5', patientName: 'David Brown', time: '09:00 AM', date: '2024-07-30', status: 'Confirmed', type: 'In-Person', patientId: '5' },
+];
+
 export default function AppointmentsPage() {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchAppointments = async () => {
-            setLoading(true);
-            const appointmentsCollection = collection(db, 'appointments');
-            const appointmentSnapshot = await getDocs(appointmentsCollection);
-            
-            const appointmentsList = await Promise.all(appointmentSnapshot.docs.map(async (appointmentDoc) => {
-                const appointmentData = appointmentDoc.data();
-                
-                let patientName = "Unknown Patient";
-                if (appointmentData.patientId) {
-                    const patientDocRef = doc(db, 'users', appointmentData.patientId);
-                    const patientDocSnap = await getDoc(patientDocRef);
-                    if (patientDocSnap.exists()) {
-                        patientName = patientDocSnap.data().name;
-                    }
-                }
-
-                return {
-                    id: appointmentDoc.id,
-                    patientName: patientName,
-                    time: appointmentData.time,
-                    date: appointmentData.date,
-                    status: appointmentData.status,
-                    type: appointmentData.type,
-                    patientId: appointmentData.patientId,
-                };
-            }));
-
-            setAppointments(appointmentsList);
+        setLoading(true);
+        // Simulate fetching data
+        setTimeout(() => {
+            setAppointments(sampleAppointments);
             setLoading(false);
-        };
-
-        fetchAppointments();
+        }, 500);
     }, []);
 
     return (

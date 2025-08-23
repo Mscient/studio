@@ -8,8 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Briefcase, User } from "lucide-react";
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface PatientData {
@@ -24,41 +22,31 @@ interface PatientData {
     avatarHint: string;
 }
 
+const samplePatient: PatientData = {
+    name: "John Patient",
+    age: 32,
+    email: "john.patient@example.com",
+    phone: "(123) 456-7890",
+    gender: "Male",
+    bloodType: "O+",
+    allergies: ["Peanuts", "Pollen"],
+    conditions: ["Hypertension", "Asthma"],
+    avatarHint: "happy man",
+};
+
 export default function PatientProfilePage({ params }: { params: { userId: string } }) {
   const [patient, setPatient] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPatientData = async () => {
-      if (!params.userId) return;
-      try {
-        const docRef = doc(db, "users", params.userId);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setPatient({
-              name: data.name || "N/A",
-              email: data.email || "N/A",
-              age: data.age || 0,
-              phone: data.phone || "N/A",
-              gender: data.gender || "N/A",
-              bloodType: data.bloodType || "Not specified",
-              allergies: data.allergies || [],
-              conditions: data.conditions || [],
-              avatarHint: data.avatarHint || "person",
-          });
-        } else {
-          console.log("No such document!");
-        }
-      } catch (error) {
-        console.error("Error fetching patient data:", error);
-      } finally {
+    setLoading(true);
+    // Simulate fetching patient data based on userId param
+    setTimeout(() => {
+        // In a real app, you'd fetch data based on params.userId
+        // For this mock, we'll just return the sample patient
+        setPatient(samplePatient);
         setLoading(false);
-      }
-    };
-
-    fetchPatientData();
+    }, 500)
   }, [params.userId]);
 
   if (loading) {

@@ -11,9 +11,6 @@ import { cn } from '@/lib/utils';
 import { ArrowLeft, Paperclip, Phone, Send, Video, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { db, auth } from '@/lib/firebase';
-import { doc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
-import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface Group {
   name: string;
@@ -27,9 +24,23 @@ interface Message {
   sender: string;
   senderId: string;
   content: string;
-  timestamp: any;
+  timestamp: Date;
   avatarHint: string;
 }
+
+const sampleGroup: Group = {
+    name: 'Cardiology Experts',
+    members: 128,
+    description: 'Discussion group for cardiologists.',
+    avatarHint: 'heartbeat cardiogram',
+};
+
+const sampleMessages: Message[] = [
+    { id: '1', sender: 'Dr. Emily Carter', senderId: 'doc1', content: 'Has anyone seen the latest study on statin alternatives?', timestamp: new Date(Date.now() - 1000 * 60 * 25), avatarHint: 'doctor professional woman' },
+    { id: '2', sender: 'Dr. Ben Hanson', senderId: 'doc2', content: 'Yes, I was just reading it. The results for bempedoic acid are quite promising, especially for statin-intolerant patients.', timestamp: new Date(Date.now() - 1000 * 60 * 20), avatarHint: 'doctor professional man' },
+    { id: '3', sender: 'You', senderId: 'currentUser', content: 'I agree. I have a patient who might be a good candidate. I\'ll forward the study to them.', timestamp: new Date(Date.now() - 1000 * 60 * 10), avatarHint: 'doctor professional' },
+];
+
 
 export default function GroupChatPage() {
   const params = useParams();
@@ -38,7 +49,6 @@ export default function GroupChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [user] = useAuthState(auth);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,44 +58,27 @@ export default function GroupChatPage() {
 
   useEffect(() => {
     if (!groupId) return;
-
-    const fetchGroupDetails = async () => {
-      const groupRef = doc(db, 'groups', groupId);
-      const groupSnap = await getDoc(groupRef);
-      if (groupSnap.exists()) {
-        setGroup(groupSnap.data() as Group);
-      } else {
-        console.error("No such group!");
-      }
-    };
-
-    fetchGroupDetails();
-
-    const q = query(collection(db, 'groups', groupId, 'messages'), orderBy('timestamp', 'asc'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const msgs: Message[] = [];
-      querySnapshot.forEach((doc) => {
-        msgs.push({ id: doc.id, ...doc.data() } as Message);
-      });
-      setMessages(msgs);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    setLoading(true);
+    setTimeout(() => {
+        setGroup(sampleGroup);
+        setMessages(sampleMessages);
+        setLoading(false);
+    }, 500);
   }, [groupId]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim() === "" || !user || !groupId) return;
+    if (newMessage.trim() === "") return;
 
-    await addDoc(collection(db, 'groups', groupId, 'messages'), {
-      sender: user.displayName || "Anonymous Doctor",
-      senderId: user.uid,
-      content: newMessage,
-      timestamp: serverTimestamp(),
-      avatarHint: 'doctor professional',
-    });
-
+    const newMsg: Message = {
+        id: (messages.length + 1).toString(),
+        sender: "You",
+        senderId: "currentUser",
+        content: newMessage,
+        timestamp: new Date(),
+        avatarHint: 'doctor professional',
+    };
+    setMessages(prev => [...prev, newMsg]);
     setNewMessage("");
   };
 
@@ -128,18 +121,18 @@ export default function GroupChatPage() {
         
         <CardContent className="flex-grow overflow-y-auto p-4 space-y-4 bg-muted/20">
           {messages.map(message => (
-            <div key={message.id} className={cn("flex items-end gap-2", message.senderId === user?.uid ? "justify-end" : "justify-start")}>
-                {message.senderId !== user?.uid && (
+            <div key={message.id} className={cn("flex items-end gap-2", message.senderId === 'currentUser' ? "justify-end" : "justify-start")}>
+                {message.senderId !== 'currentUser' && (
                      <Avatar className="h-8 w-8">
                         <AvatarImage src={`https://placehold.co/32x32.png`} data-ai-hint={message.avatarHint}/>
                         <AvatarFallback>{message.sender.split(" ").map(n=>n[0]).join("")}</AvatarFallback>
                     </Avatar>
                 )}
-              <div className={cn("max-w-xs md:max-w-md rounded-lg px-3 py-2", message.senderId === user?.uid ? "bg-primary text-primary-foreground rounded-br-none" : "bg-background rounded-bl-none shadow-sm")}>
-                {message.senderId !== user?.uid && <p className="text-xs font-semibold pb-1">{message.sender}</p>}
+              <div className={cn("max-w-xs md:max-w-md rounded-lg px-3 py-2", message.senderId === 'currentUser' ? "bg-primary text-primary-foreground rounded-br-none" : "bg-background rounded-bl-none shadow-sm")}>
+                {message.senderId !== 'currentUser' && <p className="text-xs font-semibold pb-1">{message.sender}</p>}
                 <p className="text-sm">{message.content}</p>
                 <p className="text-xs text-right mt-1 opacity-70">
-                  {message.timestamp?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             </div>

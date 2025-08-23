@@ -8,8 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Star, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 interface Doctor {
   id: string;
@@ -21,32 +19,25 @@ interface Doctor {
   avatarHint: string;
 }
 
+const sampleDoctors: Doctor[] = [
+    { id: '1', name: 'Dr. Emily Carter', specialization: 'Cardiologist', rating: 4.9, experience: '12 years', fee: '$250', avatarHint: 'doctor professional woman' },
+    { id: '2', name: 'Dr. Ben Hanson', specialization: 'Dermatologist', rating: 4.8, experience: '8 years', fee: '$200', avatarHint: 'doctor professional man' },
+    { id: '3', name: 'Dr. Sarah Lee', specialization: 'Pediatrician', rating: 4.9, experience: '15 years', fee: '$180', avatarHint: 'doctor friendly woman' },
+    { id: '4', name: 'Dr. Michael Chen', specialization: 'Neurologist', rating: 4.7, experience: '10 years', fee: '$280', avatarHint: 'doctor serious man' },
+];
+
 export default function BookAppointmentPage() {
   const { toast } = useToast();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDoctors = async () => {
-      setLoading(true);
-      const q = query(collection(db, "users"), where("role", "==", "doctor"));
-      const querySnapshot = await getDocs(q);
-      const doctorsData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          name: data.name,
-          specialization: data.specialization || 'General Physician',
-          rating: data.rating || 4.5,
-          experience: data.experience || '5 years',
-          fee: data.fee || '$100',
-          avatarHint: data.avatarHint || 'doctor professional',
-        }
-      });
-      setDoctors(doctorsData);
-      setLoading(false);
-    }
-    fetchDoctors();
+    setLoading(true);
+    // Simulate fetching data
+    setTimeout(() => {
+        setDoctors(sampleDoctors);
+        setLoading(false);
+    }, 500);
   }, []);
 
   const handleBooking = (doctorName: string) => {
