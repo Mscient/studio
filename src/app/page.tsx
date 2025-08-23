@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLogo } from '@/components/app-logo';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
@@ -36,8 +36,7 @@ export default function Home() {
     const formData = new FormData(event.currentTarget as HTMLFormElement);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    const selectedRole = formData.get('role') as string;
-
+    
     try {
       if (isRegister) {
         // Registration
@@ -50,12 +49,15 @@ export default function Home() {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
+        // Update user profile
+        await updateProfile(user, { displayName: name });
+        
         // Create user document in Firestore
         await setDoc(doc(db, "users", user.uid), {
             uid: user.uid,
             name: name,
             email: user.email,
-            role: selectedRole,
+            role: role, // Use the state variable 'role'
             age: parseInt(age, 10) || null,
             gender: gender,
             phone: contact,
@@ -64,7 +66,7 @@ export default function Home() {
         });
         
         toast({ title: "Registration Successful", description: "You can now log in." });
-        router.push(selectedRole === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
+        router.push(role === 'patient' ? '/patient/dashboard' : '/doctor/dashboard');
 
       } else {
         // Login
@@ -98,7 +100,7 @@ export default function Home() {
         let userRole = 'patient';
 
         if (!userDocSnap.exists()) {
-            // New user, create a document for them
+            // New user, create a document for them. 'role' is from the state selector.
             await setDoc(userDocRef, {
                 uid: user.uid,
                 name: user.displayName,
@@ -268,3 +270,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
