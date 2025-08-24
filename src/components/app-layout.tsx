@@ -20,6 +20,7 @@ import {
   BrainCircuit,
   Pill,
   Building,
+  Video,
 } from "lucide-react";
 
 import { useAuthState, useSignOut } from "react-firebase-hooks/auth";
@@ -46,6 +47,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "./app-logo";
 import { Skeleton } from "./ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 type NavItem = {
   href: string;
