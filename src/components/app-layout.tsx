@@ -3,28 +3,17 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
+import { usePathname } from "next/navigation";
 import {
-  Stethoscope,
   LayoutDashboard,
   CalendarCheck,
-  FileText,
-  HeartPulse,
-  LogOut,
-  User,
+  FilePlus,
   Users,
   Menu,
-  X,
-  BrainCircuit,
-  ClipboardList,
-  Video,
-  QrCode,
-  FilePlus,
   MessageSquare,
   Siren,
-  Loader2,
+  QrCode,
+  LogOut,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -45,7 +34,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "./app-logo";
-import { useToast } from "@/hooks/use-toast";
 
 type NavItem = {
   href: string;
@@ -58,16 +46,6 @@ type AppLayoutProps = {
   userType: "patient" | "doctor";
 };
 
-const patientNavItems: NavItem[] = [
-  { href: "/patient/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/patient/detailed-analysis", icon: BrainCircuit, label: "AI Detailed Analysis" },
-  { href: "/patient/health-records", icon: ClipboardList, label: "Health Records" },
-  { href: "/patient/appointments", icon: CalendarCheck, label: "Appointments" },
-  { href: "/patient/prescriptions", icon: FileText, label: "Prescriptions" },
-  { href: "/patient/book-appointment", icon: HeartPulse, label: "Book Appointment" },
-  { href: "/patient/consult-online", icon: Video, label: "Consult Online" },
-];
-
 const doctorNavItems: NavItem[] = [
   { href: "/doctor/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/doctor/appointments", icon: CalendarCheck, label: "Appointments" },
@@ -78,41 +56,10 @@ const doctorNavItems: NavItem[] = [
   { href: "/doctor/emergency", icon: Siren, label: "Emergency" },
 ];
 
-export function AppLayout({ children, userType }: AppLayoutProps) {
+export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { toast } = useToast();
-  const [user, loading] = useAuthState(auth);
-  
-  const userInitial = userType === 'doctor' ? "DR" : "PT";
-
-  const navItems = userType === "patient" ? patientNavItems : doctorNavItems;
+  const navItems = doctorNavItems;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!loading && !user) {
-      router.push('/');
-    }
-  }, [user, loading, router]);
-
-
-  const handleLogout = async () => {
-    await auth.signOut();
-    toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
-    router.push('/');
-  }
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // or a redirect component
-  }
 
   const NavContent = ({ isMobile = false }) => (
     <nav className={`flex flex-col items-start gap-2 px-2 ${isMobile ? 'sm:py-5 w-full' : 'py-4'}`}>
@@ -179,7 +126,6 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  onClick={handleLogout}
                   className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
                 >
                   <LogOut className="h-5 w-5" />
@@ -228,8 +174,8 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
                 className="overflow-hidden rounded-full"
               >
                 <Avatar>
-                  <AvatarImage src={`https://i.ibb.co/yPVRrG0/happy-man.png`} data-ai-hint={userType === 'patient' ? 'happy man' : 'happy woman'} alt="User Avatar" />
-                  <AvatarFallback>{user?.email?.charAt(0).toUpperCase() ?? userInitial}</AvatarFallback>
+                  <AvatarImage src={`https://i.ibb.co/yPVRrG0/happy-man.png`} data-ai-hint={'happy woman'} alt="User Avatar" />
+                  <AvatarFallback>DR</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -239,7 +185,7 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              <DropdownMenuItem>
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
