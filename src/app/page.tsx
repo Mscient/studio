@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
@@ -25,53 +25,57 @@ export default function AuthenticationPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
 
     const handleAuth = async (e: React.FormEvent, isRegister: boolean) => {
         e.preventDefault();
-        setIsPending(true);
+        startTransition(async () => {
+            try {
+                if (isRegister) {
+                    // Register User
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    // Save user role and name in Firestore
+                    await setDoc(doc(db, "users", user.uid), {
+                        name: name,
+                        role: role,
+                        email: email,
+                    });
+                    
+                    toast({ title: "Registration Successful", description: "You are now logged in." });
+                    redirectUser(user.uid, role);
 
-        try {
-            if (isRegister) {
-                // Register User
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                
-                // Save user role and name in Firestore
-                await setDoc(doc(db, "users", user.uid), {
-                    name: name,
-                    role: role,
-                    email: email,
-                });
-                
-                toast({ title: "Registration Successful", description: "You are now logged in." });
-                redirectUser(user.uid, role);
-
-            } else {
-                // Login User
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                
-                // Get user role from Firestore
-                const docRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const userData = docSnap.data();
-                    toast({ title: "Login Successful", description: "Welcome back!" });
-                    redirectUser(user.uid, userData.role);
                 } else {
-                    throw new Error("User data not found. Please register.");
+                    // Login User
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    // Get user role from Firestore
+                    const docRef = doc(db, "users", user.uid);
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        toast({ title: "Login Successful", description: "Welcome back!" });
+                        redirectUser(user.uid, userData.role);
+                    } else {
+                        throw new Error("User data not found. Please register.");
+                    }
                 }
+            } catch (error: any) {
+                toast({
+                    variant: "destructive",
+                    title: "Authentication Failed",
+                    description: error.message || "An unexpected error occurred.",
+                });
             }
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Authentication Failed",
-                description: error.message || "An unexpected error occurred.",
-            });
-        } finally {
-            setIsPending(false);
-        }
+        });
     };
 
     const redirectUser = (uid: string, userRole: string) => {
@@ -90,6 +94,7 @@ export default function AuthenticationPage() {
                 <AppLogo className="h-8 w-8" />
                 <h1 className="text-3xl font-bold">HealthVision</h1>
             </div>
+            {isClient && (
             <Tabs defaultValue="login" className="w-[450px]">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="login">Login</TabsTrigger>
@@ -168,6 +173,7 @@ export default function AuthenticationPage() {
                     </form>
                 </TabsContent>
             </Tabs>
+            )}
         </div>
     </div>
   );
