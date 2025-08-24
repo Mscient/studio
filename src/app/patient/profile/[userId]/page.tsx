@@ -56,7 +56,7 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
     };
     
     // This allows doctors to view patient profiles, or patients to view their own
-    const profileIdToLoad = params.userId || user?.uid;
+    const profileIdToLoad = params.userId;
 
     if (profileIdToLoad) {
         fetchPatientData(profileIdToLoad);

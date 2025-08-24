@@ -65,47 +65,60 @@ export default function PatientProfilePage() {
     },
   });
 
-  const fetchPatientData = async (uid: string) => {
-    setLoading(true);
-    const docRef = doc(db, 'users', uid);
-    const docSnap = await getDoc(docRef);
-
-    if(docSnap.exists()) {
-        const data = docSnap.data();
-        const patientData = {
-            name: data.name || "N/A",
-            email: data.email || "N/A",
-            age: data.age,
-            phone: data.phone,
-            gender: data.gender,
-            bloodType: data.bloodType,
-            allergies: data.allergies || [],
-            conditions: data.conditions || [],
-            avatarHint: "happy man",
-        };
-        setPatient(patientData);
-        form.reset({
-          name: patientData.name,
-          age: patientData.age,
-          phone: patientData.phone,
-          gender: patientData.gender,
-          bloodType: patientData.bloodType,
-          allergies: patientData.allergies?.join(', '),
-          conditions: patientData.conditions?.join(', '),
-        });
-    } else {
-        console.log("No such document!");
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    if (user) {
+    const fetchPatientData = async (uid: string) => {
+        if (!uid) {
+            setLoading(false);
+            return;
+        };
+        setLoading(true);
+        try {
+            const docRef = doc(db, 'users', uid);
+            const docSnap = await getDoc(docRef);
+
+            if(docSnap.exists()) {
+                const data = docSnap.data();
+                const patientData = {
+                    name: data.name || "N/A",
+                    email: data.email || "N/A",
+                    age: data.age,
+                    phone: data.phone,
+                    gender: data.gender,
+                    bloodType: data.bloodType,
+                    allergies: data.allergies || [],
+                    conditions: data.conditions || [],
+                    avatarHint: "happy man",
+                };
+                setPatient(patientData);
+                form.reset({
+                  name: patientData.name,
+                  age: patientData.age,
+                  phone: patientData.phone,
+                  gender: patientData.gender,
+                  bloodType: patientData.bloodType,
+                  allergies: patientData.allergies?.join(', '),
+                  conditions: patientData.conditions?.join(', '),
+                });
+            } else {
+                console.log("No such document!");
+                setPatient(null);
+            }
+        } catch (error) {
+            console.error("Error fetching patient data: ", error);
+            setPatient(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    if (!authLoading) {
+      if (user) {
         fetchPatientData(user.uid);
-    } else if (!authLoading) {
-      setLoading(false);
+      } else {
+        setLoading(false);
+      }
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, form]);
 
   const handleUpdateProfile = async (data: ProfileFormValues) => {
     if (!user) return;
@@ -122,7 +135,25 @@ export default function PatientProfilePage() {
         title: "Profile Updated",
         description: "Your information has been saved successfully.",
       });
-      fetchPatientData(user.uid); // Refresh data
+      if (user) {
+        // Re-fetch data after update
+        const docRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(docRef);
+        if(docSnap.exists()) {
+            const updatedData = docSnap.data();
+            setPatient({
+                name: updatedData.name || "N/A",
+                email: updatedData.email || "N/A",
+                age: updatedData.age,
+                phone: updatedData.phone,
+                gender: updatedData.gender,
+                bloodType: updatedData.bloodType,
+                allergies: updatedData.allergies || [],
+                conditions: updatedData.conditions || [],
+                avatarHint: "happy man",
+            });
+        }
+      }
       setIsDialogOpen(false);
     } catch (error) {
       console.error("Error updating profile: ", error);
@@ -182,7 +213,14 @@ export default function PatientProfilePage() {
   }
 
   if (!patient) {
-      return <AppLayout><p>Patient not found.</p></AppLayout>
+      return (
+        <AppLayout>
+          <div className="text-center py-10">
+            <p>Patient profile not found.</p>
+            <p className="text-sm text-muted-foreground">Please complete your profile information.</p>
+          </div>
+        </AppLayout>
+      )
   }
 
 
