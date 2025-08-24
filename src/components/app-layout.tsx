@@ -4,6 +4,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
 import {
   Stethoscope,
   LayoutDashboard,
@@ -22,6 +24,7 @@ import {
   FilePlus,
   MessageSquare,
   Siren,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -79,14 +82,36 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
+  const [user, loading] = useAuthState(auth);
   
   const userInitial = userType === 'doctor' ? "DR" : "PT";
 
   const navItems = userType === "patient" ? patientNavItems : doctorNavItems;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.push('/');
+    }
+  }, [user, loading, router]);
+
+
   const handleLogout = async () => {
-    toast({ title: 'Logout Action', description: 'Logout functionality is currently disabled.' });
+    await auth.signOut();
+    toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+    router.push('/');
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // or a redirect component
   }
 
   const NavContent = ({ isMobile = false }) => (
@@ -189,7 +214,7 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
                 <NavContent isMobile={true} />
               </SheetContent>
             </Sheet>
-            <Link href="/" className="flex items-center gap-2 font-semibold">
+            <Link href="/" className="sm:hidden flex items-center gap-2 font-semibold">
                 <AppLogo className="h-7 w-7 text-primary" />
                 <h1 className="text-xl font-semibold text-primary">HealthVision</h1>
             </Link>
@@ -204,7 +229,7 @@ export function AppLayout({ children, userType }: AppLayoutProps) {
               >
                 <Avatar>
                   <AvatarImage src={`https://i.ibb.co/yPVRrG0/happy-man.png`} data-ai-hint={userType === 'patient' ? 'happy man' : 'happy woman'} alt="User Avatar" />
-                  <AvatarFallback>{userInitial}</AvatarFallback>
+                  <AvatarFallback>{user?.email?.charAt(0).toUpperCase() ?? userInitial}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
