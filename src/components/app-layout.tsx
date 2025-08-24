@@ -65,6 +65,7 @@ const doctorNavItems: NavItem[] = [
   { href: "/doctor/patients", icon: Users, label: "My Patients" },
   { href: "/doctor/write-prescription", icon: FilePlus, label: "Write Prescription" },
   { href: "/doctor/scan-qr", icon: QrCode, label: "Scan Patient QR" },
+  { href: "/doctor/documents", icon: FileText, label: "Documents" },
   { href: "/doctor/community", icon: MessageSquare, label: "Community" },
   { href: "/doctor/emergency", icon: Siren, label: "Emergency" },
 ];
@@ -74,6 +75,7 @@ const patientNavItems: NavItem[] = [
     { href: "/patient/appointments", icon: CalendarCheck, label: "My Appointments" },
     { href: "/patient/prescriptions", icon: Pill, label: "My Prescriptions" },
     { href: "/patient/health-records", icon: FileText, label: "Health Records" },
+    { href: "/patient/documents", icon: FileText, label: "My Documents" },
     { href: "/patient/book-appointment", icon: Stethoscope, label: "Book Doctor" },
     { href: "/patient/consult-online", icon: Video, label: "Consult Online" },
     { href: "/patient/detailed-analysis", icon: BrainCircuit, label: "AI Analysis" },
