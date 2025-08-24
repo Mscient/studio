@@ -45,10 +45,10 @@ export default function PatientDashboard() {
         setLoading(false);
       };
       fetchUserData();
-    } else if (!user) {
+    } else if (!user && !loading) {
         setLoading(false);
     }
-  }, [user]);
+  }, [user, loading]);
 
   if(loading) {
     return (
@@ -90,7 +90,7 @@ export default function PatientDashboard() {
               </Link>
               <Link href="/patient/health-records" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <FileText className="w-7 h-7 text-primary" />
-                <span className="text-center text-xs font-medium">View Reports</span>
+                <span className="text-center text-xs font-medium">View Records</span>
               </Link>
               <Link href="/patient/detailed-analysis" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <BrainCircuit className="w-7 h-7 text-primary" />

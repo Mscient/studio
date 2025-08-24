@@ -12,7 +12,9 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from 'lucide-react';
-
+import { auth, db } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 export default function AuthenticationPage() {
     const router = useRouter();
@@ -20,17 +22,66 @@ export default function AuthenticationPage() {
     const [isPending, startTransition] = useTransition();
 
     const [role, setRole] = useState('patient');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
 
-    const handleProceed = (e: React.FormEvent) => {
+    const handleAuth = async (e: React.FormEvent, isRegister: boolean) => {
         e.preventDefault();
-        startTransition(() => {
-            if (role === 'doctor') {
-                router.push('/doctor/dashboard');
+        setIsPending(true);
+
+        try {
+            if (isRegister) {
+                // Register User
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // Save user role and name in Firestore
+                await setDoc(doc(db, "users", user.uid), {
+                    name: name,
+                    role: role,
+                    email: email,
+                });
+                
+                toast({ title: "Registration Successful", description: "You are now logged in." });
+                redirectUser(user.uid, role);
+
             } else {
-                router.push('/patient/dashboard');
+                // Login User
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // Get user role from Firestore
+                const docRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    toast({ title: "Login Successful", description: "Welcome back!" });
+                    redirectUser(user.uid, userData.role);
+                } else {
+                    throw new Error("User data not found. Please register.");
+                }
             }
-        });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Authentication Failed",
+                description: error.message || "An unexpected error occurred.",
+            });
+        } finally {
+            setIsPending(false);
+        }
     };
+
+    const redirectUser = (uid: string, userRole: string) => {
+        if (userRole === 'doctor') {
+            router.push('/doctor/dashboard');
+        } else {
+            router.push('/patient/dashboard');
+        }
+    }
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-muted/40">
@@ -39,42 +90,60 @@ export default function AuthenticationPage() {
                 <AppLogo className="h-8 w-8" />
                 <h1 className="text-3xl font-bold">HealthVision</h1>
             </div>
-            <Tabs defaultValue="register" className="w-[450px]">
+            <Tabs defaultValue="login" className="w-[450px]">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="login" disabled>Login</TabsTrigger>
-                    <TabsTrigger value="register">Enter Dashboard</TabsTrigger>
+                    <TabsTrigger value="login">Login</TabsTrigger>
+                    <TabsTrigger value="register">Register</TabsTrigger>
                 </TabsList>
                 <TabsContent value="login">
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>Login</CardTitle>
-                            <CardDescription>
-                                This feature is currently disabled. Please use the "Enter Dashboard" tab.
-                            </CardDescription>
-                        </CardHeader>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="register">
-                     <form onSubmit={handleProceed}>
+                     <form onSubmit={(e) => handleAuth(e, false)}>
                         <Card>
                             <CardHeader>
-                                <CardTitle>Enter Dashboard</CardTitle>
+                                <CardTitle>Login</CardTitle>
                                 <CardDescription>
-                                   Select a role to explore the application. No login required.
+                                    Welcome back. Please login to your account.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="login-email">Email</Label>
+                                    <Input id="login-email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="login-password">Password</Label>
+                                    <Input id="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required/>
+                                </div>
+                            </CardContent>
+                            <CardContent>
+                                 <Button type="submit" className="w-full" disabled={isPending}>
+                                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Login
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </form>
+                </TabsContent>
+                <TabsContent value="register">
+                     <form onSubmit={(e) => handleAuth(e, true)}>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Register</CardTitle>
+                                <CardDescription>
+                                   Create a new account to get started.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="name">Full Name</Label>
-                                    <Input id="name" placeholder="John Doe" defaultValue="John Doe" required />
+                                    <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input id="email" type="email" placeholder="m@example.com" defaultValue="m@example.com" required />
+                                    <Label htmlFor="register-email">Email</Label>
+                                    <Input id="register-email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="password">Password</Label>
-                                    <Input id="password" type="password" defaultValue="password" required/>
+                                    <Label htmlFor="register-password">Password</Label>
+                                    <Input id="register-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required/>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="role">Your Role</Label>
@@ -92,7 +161,7 @@ export default function AuthenticationPage() {
                             <CardContent>
                                  <Button type="submit" className="w-full" disabled={isPending}>
                                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Proceed to Dashboard
+                                    Create Account
                                 </Button>
                             </CardContent>
                         </Card>

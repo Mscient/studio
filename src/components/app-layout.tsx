@@ -18,6 +18,7 @@ import {
   Pill,
   Video,
   BrainCircuit,
+  LogOut
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "./app-logo";
 import { Loader2 } from "lucide-react";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 type NavItem = {
   href: string;
@@ -74,17 +80,39 @@ const patientNavItems: NavItem[] = [
 
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  const [loading, setLoading] = React.useState(true);
-
-  const userRole = pathname.startsWith('/doctor') ? 'doctor' : 'patient';
+  const [user, authLoading] = useAuthState(auth);
+  const [userData, setUserData] = React.useState<{name: string, role: string, avatarHint: string} | null>(null);
 
   React.useEffect(() => {
-    // Simulate initial load
-    const timer = setTimeout(() => setLoading(false), 250);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!authLoading && !user) {
+        router.push('/');
+    }
 
+    if (user && !userData) {
+      const fetchUserData = async () => {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            setUserData({
+                name: data.name || "User",
+                role: data.role || "patient",
+                avatarHint: data.role === "doctor" ? "doctor professional" : "happy man",
+            });
+        }
+      };
+      fetchUserData();
+    }
+  }, [user, authLoading, router, userData]);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/');
+  }
+
+  const userRole = userData?.role;
   const navItems = userRole === "doctor" ? doctorNavItems : patientNavItems;
 
   const NavContent = ({ isMobile = false }) => (
@@ -113,18 +141,13 @@ export function AppLayout({ children }: AppLayoutProps) {
     </nav>
   );
   
-   if (loading) {
+   if (authLoading || !user || !userData) {
     return (
        <div className="flex h-screen items-center justify-center">
          <Loader2 className="h-10 w-10 animate-spin text-primary" />
        </div>
     )
   }
-
-  const userData = userRole === 'doctor' ? 
-    { name: 'Dr. Smith', avatarHint: 'doctor professional' } : 
-    { name: 'John Patient', avatarHint: 'happy man' };
-
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -209,8 +232,8 @@ export function AppLayout({ children }: AppLayoutProps) {
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-               <DropdownMenuItem asChild>
-                <Link href="/">Switch Role</Link>
+               <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer">
+                <LogOut /> Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

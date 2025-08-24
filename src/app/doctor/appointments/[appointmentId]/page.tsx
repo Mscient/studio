@@ -13,6 +13,8 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getDetailedAnalysis } from "@/lib/actions";
 import { DetailedAnalysisOutput } from "@/ai/flows/detailed-analysis";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface Patient {
     id: string;
@@ -35,11 +37,6 @@ interface Appointment {
     type: string;
     reason: string;
 }
-
-const samplePatient: Patient = {
-    id: '1', name: 'John Doe', age: 45, email: 'john.d@example.com', phone: '123-456-7890', bloodType: 'A+',
-    allergies: ['Penicillin'], conditions: ['Type 1 Diabetes', 'Hypertension'], avatarHint: 'man glasses'
-};
 
 const sampleAppointment: Appointment = {
     id: '1', patientId: '1', patientName: 'John Doe', time: '10:00 AM', date: '2024-07-29', type: 'Video', reason: 'Experiencing persistent headache and dizziness for the last 3 days.'
@@ -73,31 +70,48 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
   useEffect(() => {
     const fetchAppointmentDetails = async (id: string) => {
         setLoading(true);
-        // Simulate fetching data
-        setTimeout(async () => {
-            setPatient(samplePatient);
-            setAppointment(sampleAppointment);
-            setLoading(false);
-            
-            setAnalysisLoading(true);
-            const analysisResult = await getDetailedAnalysis({
-                symptoms: sampleAppointment.reason,
-                treatmentHistory: samplePatient.conditions.join(', '),
-            });
+        // In a real app, you'd fetch the appointment which contains the patientId
+        const fetchedAppointment = sampleAppointment; // Using sample for now
+        setAppointment(fetchedAppointment);
 
-            if (analysisResult.success && analysisResult.data) {
-                setAiAnalysis(analysisResult.data);
-            } else {
-                console.error("AI Analysis failed:", analysisResult.error);
-                setAiAnalysis({
-                    report: "Could not generate AI analysis for this appointment.",
-                    keyIndicators: { bloodSugar: "N/A", heartRate: "N/A" },
-                    urgency: "routine",
-                    explanation: "The AI model could not process the appointment details."
-                });
-            }
-            setAnalysisLoading(false);
-        }, 500);
+        // Then fetch the patient data using patientId
+        const patientDocRef = doc(db, 'users', 'qSg1M4kSMXPvFk5Kz9r2a3HkG6E3'); // Hardcoding a patient ID for demo
+        const patientDocSnap = await getDoc(patientDocRef);
+
+        if (patientDocSnap.exists()) {
+            const data = patientDocSnap.data();
+             const fetchedPatient = {
+                id: patientDocSnap.id,
+                name: data.name,
+                age: data.age || 0,
+                email: data.email,
+                phone: data.phone || 'N/A',
+                bloodType: data.bloodType || 'N/A',
+                allergies: data.allergies || [],
+                conditions: data.conditions || [],
+                avatarHint: 'man glasses'
+            };
+            setPatient(fetchedPatient);
+
+             setAnalysisLoading(true);
+             const analysisResult = await getDetailedAnalysis({
+                 symptoms: fetchedAppointment.reason,
+                 treatmentHistory: fetchedPatient.conditions.join(', '),
+             });
+             if (analysisResult.success && analysisResult.data) {
+                 setAiAnalysis(analysisResult.data);
+             } else {
+                 console.error("AI Analysis failed:", analysisResult.error);
+                 setAiAnalysis({
+                     report: "Could not generate AI analysis for this appointment.",
+                     keyIndicators: { bloodSugar: "N/A", heartRate: "N/A" },
+                     urgency: "routine",
+                     explanation: "The AI model could not process the appointment details."
+                 });
+             }
+             setAnalysisLoading(false);
+        }
+        setLoading(false);
     }
     
     fetchAppointmentDetails(params.appointmentId);
@@ -106,7 +120,7 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
   
   if (loading || !appointment || !patient) {
     return (
-        <AppLayout userType="doctor">
+        <AppLayout>
             <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
@@ -115,7 +129,7 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
   }
 
   return (
-    <AppLayout userType="doctor">
+    <AppLayout>
        <div className="flex flex-col gap-4">
             <div>
                 <Button variant="outline" asChild>
@@ -146,7 +160,7 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
                             <h3 className="text-lg font-bold">{patient.name}</h3>
                             <p className="text-muted-foreground text-sm">Age: {patient.age}</p>
                             <Button variant="outline" size="sm" className="mt-3" asChild>
-                                <Link href={`/patient/profile/${appointment.patientId}`}>View Full Profile</Link>
+                                <Link href={`/patient/profile/${patient.id}`}>View Full Profile</Link>
                             </Button>
                         </CardContent>
                     </Card>
