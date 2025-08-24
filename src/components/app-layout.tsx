@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -14,7 +14,17 @@ import {
   Siren,
   QrCode,
   LogOut,
+  Stethoscope,
+  HeartPulse,
+  FileText,
+  BrainCircuit,
+  Pill,
+  Building,
 } from "lucide-react";
+
+import { useAuthState, useSignOut } from "react-firebase-hooks/auth";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +44,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "./app-logo";
+import { Skeleton } from "./ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 type NavItem = {
   href: string;
@@ -43,7 +55,6 @@ type NavItem = {
 
 type AppLayoutProps = {
   children: React.ReactNode;
-  userType: "patient" | "doctor";
 };
 
 const doctorNavItems: NavItem[] = [
@@ -56,10 +67,63 @@ const doctorNavItems: NavItem[] = [
   { href: "/doctor/emergency", icon: Siren, label: "Emergency" },
 ];
 
+const patientNavItems: NavItem[] = [
+    { href: "/patient/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/patient/appointments", icon: CalendarCheck, label: "My Appointments" },
+    { href: "/patient/prescriptions", icon: Pill, label: "My Prescriptions" },
+    { href: "/patient/health-records", icon: FileText, label: "Health Records" },
+    { href: "/patient/book-appointment", icon: Stethoscope, label: "Book Doctor" },
+    { href: "/patient/consult-online", icon: Video, label: "Consult Online" },
+    { href: "/patient/detailed-analysis", icon: BrainCircuit, label: "AI Analysis" },
+];
+
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
-  const navItems = doctorNavItems;
+  const router = useRouter();
+  const [user, loading] = useAuthState(auth);
+  const [signOut] = useSignOut(auth);
+  const { toast } = useToast();
+
+  const [userRole, setUserRole] = React.useState<"patient" | "doctor" | null>(null);
+  const [userData, setUserData] = React.useState<{name: string, avatarHint: string} | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/');
+    }
+    if (user) {
+        const fetchUserData = async () => {
+            const docRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                setUserRole(data.role);
+                setUserData({ name: data.name, avatarHint: data.role === 'doctor' ? 'doctor professional' : 'happy man' });
+                
+                // Redirect if user is on the wrong dashboard
+                const currentArea = pathname.split('/')[1];
+                if (data.role !== currentArea) {
+                    router.replace(`/${data.role}/dashboard`);
+                }
+
+            } else {
+                // User exists in auth but not in firestore, something went wrong
+                console.error("No user profile found in Firestore!");
+                router.replace('/');
+            }
+        };
+        fetchUserData();
+    }
+  }, [user, loading, router, pathname]);
+
+  const handleLogout = async () => {
+    await signOut();
+    toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+    router.push('/');
+  };
+
+  const navItems = userRole === "doctor" ? doctorNavItems : patientNavItems;
 
   const NavContent = ({ isMobile = false }) => (
     <nav className={`flex flex-col items-start gap-2 px-2 ${isMobile ? 'sm:py-5 w-full' : 'py-4'}`}>
@@ -86,6 +150,14 @@ export function AppLayout({ children }: AppLayoutProps) {
       </TooltipProvider>
     </nav>
   );
+  
+   if (loading || !userRole) {
+    return (
+       <div className="flex h-screen items-center justify-center">
+         <Loader2 className="h-10 w-10 animate-spin text-primary" />
+       </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -126,6 +198,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
+                  onClick={handleLogout}
                   className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
                 >
                   <LogOut className="h-5 w-5" />
@@ -174,18 +247,18 @@ export function AppLayout({ children }: AppLayoutProps) {
                 className="overflow-hidden rounded-full"
               >
                 <Avatar>
-                  <AvatarImage src={`https://i.ibb.co/yPVRrG0/happy-man.png`} data-ai-hint={'happy woman'} alt="User Avatar" />
-                  <AvatarFallback>DR</AvatarFallback>
+                  <AvatarImage src={`https://placehold.co/32x32.png`} data-ai-hint={userData?.avatarHint || 'user'} alt="User Avatar" />
+                  <AvatarFallback>{userData ? userData.name.split(" ").map(n => n[0]).join("") : 'U'}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>{userData?.name || 'My Account'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>

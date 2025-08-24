@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode, BrainCircuit, Pill, Building } from "lucide-react";
+import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode, BrainCircuit, Pill, Building, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -21,6 +21,7 @@ export default function PatientDashboard() {
   const [userName, setUserName] = useState('');
   const [greeting, setGreeting] = useState('Welcome back!');
   const [profileUrl, setProfileUrl] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const generateProfileUrl = () => {
     if (user) {
@@ -33,6 +34,7 @@ export default function PatientDashboard() {
   useEffect(() => {
     if (user) {
       const fetchUserData = async () => {
+        setLoading(true);
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -40,13 +42,26 @@ export default function PatientDashboard() {
             setUserName(userData.name);
             setGreeting(`Welcome back, ${userData.name.split(' ')[0]}!`);
         }
+        setLoading(false);
       };
       fetchUserData();
+    } else if (!user) {
+        setLoading(false);
     }
   }, [user]);
 
+  if(loading) {
+    return (
+        <AppLayout>
+            <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        </AppLayout>
+    )
+  }
+
   return (
-    <AppLayout userType="patient">
+    <AppLayout>
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <div className="xl:col-span-2 space-y-4">
           <Card>
@@ -64,18 +79,22 @@ export default function PatientDashboard() {
             <CardHeader className="border-b">
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-2 p-4">
+            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-2 p-4">
               <Link href="/patient/book-appointment" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
-                <HeartPulse className="w-7 h-7 text-primary" />
+                <Stethoscope className="w-7 h-7 text-primary" />
                 <span className="text-center text-xs font-medium">Book Doctor</span>
+              </Link>
+               <Link href="/patient/consult-online" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+                <Video className="w-7 h-7 text-primary" />
+                <span className="text-center text-xs font-medium">Consult Online</span>
               </Link>
               <Link href="/patient/health-records" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
                 <FileText className="w-7 h-7 text-primary" />
                 <span className="text-center text-xs font-medium">View Reports</span>
               </Link>
-              <Link href="/patient/consult-online" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
-                <Video className="w-7 h-7 text-primary" />
-                <span className="text-center text-xs font-medium">Consult Online</span>
+              <Link href="/patient/detailed-analysis" className="flex flex-col items-center justify-center space-y-1 p-3 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+                <BrainCircuit className="w-7 h-7 text-primary" />
+                <span className="text-center text-xs font-medium">AI Analysis</span>
               </Link>
             </CardContent>
           </Card>

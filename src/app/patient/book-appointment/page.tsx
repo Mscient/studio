@@ -49,7 +49,7 @@ export default function BookAppointmentPage() {
   
   if (loading) {
     return (
-        <AppLayout userType="patient">
+        <AppLayout>
             <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
@@ -58,7 +58,7 @@ export default function BookAppointmentPage() {
   }
 
   return (
-    <AppLayout userType="patient">
+    <AppLayout>
       <div className="flex flex-col gap-4">
         <Card>
             <CardHeader className="border-b">

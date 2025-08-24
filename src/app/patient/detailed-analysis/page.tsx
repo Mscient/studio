@@ -5,7 +5,7 @@ import { BrainCircuit } from "lucide-react";
 
 export default function DetailedAnalysisPage() {
   return (
-    <AppLayout userType="patient">
+    <AppLayout>
       <div className="flex flex-col gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center gap-4">

@@ -2,12 +2,15 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import { AppLayout } from "@/components/app-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Briefcase, User } from "lucide-react";
+import { Briefcase, User, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface PatientData {
@@ -22,36 +25,50 @@ interface PatientData {
     avatarHint: string;
 }
 
-const samplePatient: PatientData = {
-    name: "John Patient",
-    age: 32,
-    email: "john.patient@example.com",
-    phone: "(123) 456-7890",
-    gender: "Male",
-    bloodType: "O+",
-    allergies: ["Peanuts", "Pollen"],
-    conditions: ["Hypertension", "Asthma"],
-    avatarHint: "happy man",
-};
-
 export default function PatientProfilePage({ params }: { params: { userId: string } }) {
   const [patient, setPatient] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, authLoading] = useAuthState(auth);
 
   useEffect(() => {
-    setLoading(true);
-    // Simulate fetching patient data based on userId param
-    setTimeout(() => {
-        // In a real app, you'd fetch data based on params.userId
-        // For this mock, we'll just return the sample patient
-        setPatient(samplePatient);
-        setLoading(false);
-    }, 500)
-  }, [params.userId]);
+    const fetchPatientData = async (uid: string) => {
+        setLoading(true);
+        const docRef = doc(db, 'users', uid);
+        const docSnap = await getDoc(docRef);
 
-  if (loading) {
+        if(docSnap.exists()) {
+            const data = docSnap.data();
+            setPatient({
+                name: data.name || "N/A",
+                age: data.age || "N/A",
+                email: data.email || "N/A",
+                phone: data.phone || "N/A",
+                gender: data.gender || "N/A",
+                bloodType: data.bloodType || "N/A",
+                allergies: data.allergies || [],
+                conditions: data.conditions || [],
+                avatarHint: "happy man",
+            });
+        } else {
+            console.log("No such document!");
+        }
+        setLoading(false);
+    };
+    
+    // For doctor viewing a patient's profile via QR code
+    if (params.userId) {
+        fetchPatientData(params.userId);
+    } 
+    // For patient viewing their own profile
+    else if (user) {
+        fetchPatientData(user.uid);
+    }
+
+  }, [params.userId, user, authLoading]);
+
+  if (loading || authLoading) {
     return (
-        <AppLayout userType="patient">
+        <AppLayout>
             <div className="w-full max-w-4xl mx-auto">
                 <Card className="shadow-lg">
                     <CardHeader className="bg-card border-b">
@@ -64,7 +81,30 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
                         </div>
                     </CardHeader>
                     <CardContent className="p-4 grid gap-4">
-                        <Skeleton className="h-48 w-full" />
+                         <div className="grid md:grid-cols-2 gap-4">
+                            <Card>
+                                <CardHeader className="p-4 border-b">
+                                    <Skeleton className="h-6 w-40" />
+                                </CardHeader>
+                                <CardContent className="space-y-6 p-4">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-full" />
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader className="p-4 border-b">
+                                    <Skeleton className="h-6 w-40" />
+                                </CardHeader>
+                                <CardContent className="space-y-4 p-4">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-10 w-full" />
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-10 w-full" />
+                                </CardContent>
+                            </Card>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -73,12 +113,12 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
   }
 
   if (!patient) {
-      return <AppLayout userType="patient"><p>Patient not found.</p></AppLayout>
+      return <AppLayout><p>Patient not found.</p></AppLayout>
   }
 
 
   return (
-    <AppLayout userType="patient">
+    <AppLayout>
        <div className="w-full max-w-4xl mx-auto">
         <Card className="shadow-lg">
             <CardHeader className="bg-card border-b">

@@ -160,7 +160,7 @@ export default function AppointmentsPage() {
   }
 
   return (
-    <AppLayout userType="patient">
+    <AppLayout>
       <div className="flex flex-col gap-4">
         <Card>
             <CardHeader>

@@ -93,7 +93,7 @@ export default function HealthRecordsPage() {
   }
 
   return (
-    <AppLayout userType="patient">
+    <AppLayout>
       <div className="flex flex-col gap-8">
         <Card>
           <CardHeader>
