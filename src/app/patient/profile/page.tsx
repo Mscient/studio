@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { AppLayout } from "@/components/app-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,9 +13,25 @@ import { Separator } from "@/components/ui/separator";
 import { Briefcase, User, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from 'zod';
+
+const profileSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  age: z.coerce.number().positive().optional(),
+  phone: z.string().optional(),
+  gender: z.string().optional(),
+  bloodType: z.string().optional(),
+  allergies: z.string().optional(),
+  conditions: z.string().optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface PatientData {
     name: string;
@@ -33,37 +49,91 @@ export default function PatientProfilePage() {
   const [patient, setPatient] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, authLoading] = useAuthState(auth);
+  const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: '',
+      age: undefined,
+      phone: '',
+      gender: '',
+      bloodType: '',
+      allergies: '',
+      conditions: '',
+    },
+  });
+
+  const fetchPatientData = async (uid: string) => {
+    setLoading(true);
+    const docRef = doc(db, 'users', uid);
+    const docSnap = await getDoc(docRef);
+
+    if(docSnap.exists()) {
+        const data = docSnap.data();
+        const patientData = {
+            name: data.name || "N/A",
+            email: data.email || "N/A",
+            age: data.age,
+            phone: data.phone,
+            gender: data.gender,
+            bloodType: data.bloodType,
+            allergies: data.allergies || [],
+            conditions: data.conditions || [],
+            avatarHint: "happy man",
+        };
+        setPatient(patientData);
+        form.reset({
+          name: patientData.name,
+          age: patientData.age,
+          phone: patientData.phone,
+          gender: patientData.gender,
+          bloodType: patientData.bloodType,
+          allergies: patientData.allergies?.join(', '),
+          conditions: patientData.conditions?.join(', '),
+        });
+    } else {
+        console.log("No such document!");
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (user) {
-        const fetchPatientData = async () => {
-            setLoading(true);
-            const docRef = doc(db, 'users', user.uid);
-            const docSnap = await getDoc(docRef);
-
-            if(docSnap.exists()) {
-                const data = docSnap.data();
-                setPatient({
-                    name: data.name || "N/A",
-                    age: data.age,
-                    email: data.email || "N/A",
-                    phone: data.phone,
-                    gender: data.gender,
-                    bloodType: data.bloodType,
-                    allergies: data.allergies || [],
-                    conditions: data.conditions || [],
-                    avatarHint: "happy man",
-                });
-            } else {
-                console.log("No such document!");
-            }
-            setLoading(false);
-        };
-        fetchPatientData();
+        fetchPatientData(user.uid);
     } else if (!authLoading) {
       setLoading(false);
     }
   }, [user, authLoading]);
+
+  const handleUpdateProfile = async (data: ProfileFormValues) => {
+    if (!user) return;
+
+    const profileData = {
+      ...data,
+      allergies: data.allergies?.split(',').map(s => s.trim()).filter(Boolean) || [],
+      conditions: data.conditions?.split(',').map(s => s.trim()).filter(Boolean) || [],
+    };
+
+    try {
+      await setDoc(doc(db, 'users', user.uid), profileData, { merge: true });
+      toast({
+        title: "Profile Updated",
+        description: "Your information has been saved successfully.",
+      });
+      fetchPatientData(user.uid); // Refresh data
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating profile: ", error);
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "There was an error saving your profile.",
+      });
+    }
+  };
+
 
   if (loading || authLoading) {
     return (
@@ -131,7 +201,7 @@ export default function PatientProfilePage() {
                         <CardDescription className="text-base">Patient Health Profile</CardDescription>
                     </div>
                 </div>
-                 <Dialog>
+                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button variant="outline">Edit Profile</Button>
                     </DialogTrigger>
@@ -142,10 +212,46 @@ export default function PatientProfilePage() {
                             Make changes to your profile here. Click save when you're done.
                         </DialogDescription>
                         </DialogHeader>
-                        {/* Add form here */}
-                        <DialogFooter>
-                            <Button type="submit">Save changes</Button>
-                        </DialogFooter>
+                        <form onSubmit={form.handleSubmit(handleUpdateProfile)} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="name">Full Name</Label>
+                                    <Input id="name" {...form.register('name')} />
+                                    {form.formState.errors.name && <p className="text-destructive text-xs">{form.formState.errors.name.message}</p>}
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="age">Age</Label>
+                                    <Input id="age" type="number" {...form.register('age')} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="phone">Phone</Label>
+                                    <Input id="phone" {...form.register('phone')} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="gender">Gender</Label>
+                                    <Input id="gender" {...form.register('gender')} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="bloodType">Blood Type</Label>
+                                    <Input id="bloodType" {...form.register('bloodType')} />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="allergies">Allergies (comma-separated)</Label>
+                                <Input id="allergies" {...form.register('allergies')} />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="conditions">Existing Conditions (comma-separated)</Label>
+                                <Input id="conditions" {...form.register('conditions')} />
+                            </div>
+
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button type="button" variant="ghost">Cancel</Button>
+                                </DialogClose>
+                                <Button type="submit">Save changes</Button>
+                            </DialogFooter>
+                        </form>
                     </DialogContent>
                 </Dialog>
             </CardHeader>

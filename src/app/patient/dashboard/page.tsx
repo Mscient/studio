@@ -17,7 +17,7 @@ import QRCode from "qrcode.react";
 
 
 export default function PatientDashboard() {
-  const [user] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth);
   const [userName, setUserName] = useState('');
   const [greeting, setGreeting] = useState('Welcome back!');
   const [profileUrl, setProfileUrl] = useState('');
@@ -32,25 +32,25 @@ export default function PatientDashboard() {
   }
 
   useEffect(() => {
-    if (user) {
-      const fetchUserData = async () => {
-        setLoading(true);
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            const userData = docSnap.data();
-            setUserName(userData.name);
-            setGreeting(`Welcome back, ${userData.name.split(' ')[0]}!`);
+    const fetchUserData = async () => {
+        if (user) {
+            setLoading(true);
+            const docRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const userData = docSnap.data();
+                setUserName(userData.name);
+                setGreeting(`Welcome back, ${userData.name.split(' ')[0]}!`);
+            }
+             setLoading(false);
         }
-        setLoading(false);
-      };
+    };
+    if (!authLoading) {
       fetchUserData();
-    } else if (!user && !loading) {
-        setLoading(false);
     }
-  }, [user, loading]);
+  }, [user, authLoading]);
 
-  if(loading) {
+  if(loading || authLoading) {
     return (
         <AppLayout>
             <div className="flex justify-center items-center h-[calc(100vh-10rem)]">

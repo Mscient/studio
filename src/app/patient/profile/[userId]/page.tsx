@@ -55,13 +55,13 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
         setLoading(false);
     };
     
-    // Determine which user profile to load
-    const profileId = params.userId || user?.uid;
+    // This allows doctors to view patient profiles, or patients to view their own
+    const profileIdToLoad = params.userId || user?.uid;
 
-    if (profileId) {
-        fetchPatientData(profileId);
+    if (profileIdToLoad) {
+        fetchPatientData(profileIdToLoad);
     } else if (!authLoading) {
-      setLoading(false)
+      setLoading(false); // Finished auth check, no user, stop loading
     }
 
   }, [params.userId, user, authLoading]);
@@ -113,7 +113,13 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
   }
 
   if (!patient) {
-      return <AppLayout><p>Patient not found.</p></AppLayout>
+      return (
+        <AppLayout>
+            <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
+                <p>Patient profile not found or you do not have permission to view it.</p>
+            </div>
+        </AppLayout>
+      )
   }
 
 
@@ -168,7 +174,7 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
                         <CardContent className="space-y-3 text-sm p-4">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Blood Type</span>
-                                <span className="font-medium">{patient.bloodType}</span>
+                                <span className="font-medium">{patient.bloodType || 'N/A'}</span>
                             </div>
                             <Separator />
                             <div>

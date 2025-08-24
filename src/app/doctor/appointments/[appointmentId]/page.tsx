@@ -74,43 +74,37 @@ export default function AppointmentDetailsPage({ params }: { params: { appointme
         const fetchedAppointment = sampleAppointment; // Using sample for now
         setAppointment(fetchedAppointment);
 
-        // Then fetch the patient data using patientId
-        const patientDocRef = doc(db, 'users', 'qSg1M4kSMXPvFk5Kz9r2a3HkG6E3'); // Hardcoding a patient ID for demo
-        const patientDocSnap = await getDoc(patientDocRef);
+        // Then fetch the patient data using patientId. For now, we'll use a sample patient.
+        const fetchedPatient = {
+            id: '1',
+            name: 'John Doe',
+            age: 45,
+            email: 'john.doe@example.com',
+            phone: '123-456-7890',
+            bloodType: 'O+',
+            allergies: ['Peanuts'],
+            conditions: ['Hypertension'],
+            avatarHint: 'man glasses'
+        };
+        setPatient(fetchedPatient);
 
-        if (patientDocSnap.exists()) {
-            const data = patientDocSnap.data();
-             const fetchedPatient = {
-                id: patientDocSnap.id,
-                name: data.name,
-                age: data.age || 0,
-                email: data.email,
-                phone: data.phone || 'N/A',
-                bloodType: data.bloodType || 'N/A',
-                allergies: data.allergies || [],
-                conditions: data.conditions || [],
-                avatarHint: 'man glasses'
-            };
-            setPatient(fetchedPatient);
-
-             setAnalysisLoading(true);
-             const analysisResult = await getDetailedAnalysis({
-                 symptoms: fetchedAppointment.reason,
-                 treatmentHistory: fetchedPatient.conditions.join(', '),
-             });
-             if (analysisResult.success && analysisResult.data) {
-                 setAiAnalysis(analysisResult.data);
-             } else {
-                 console.error("AI Analysis failed:", analysisResult.error);
-                 setAiAnalysis({
-                     report: "Could not generate AI analysis for this appointment.",
-                     keyIndicators: { bloodSugar: "N/A", heartRate: "N/A" },
-                     urgency: "routine",
-                     explanation: "The AI model could not process the appointment details."
-                 });
-             }
-             setAnalysisLoading(false);
+        setAnalysisLoading(true);
+        const analysisResult = await getDetailedAnalysis({
+            symptoms: fetchedAppointment.reason,
+            treatmentHistory: fetchedPatient.conditions.join(', '),
+        });
+        if (analysisResult.success && analysisResult.data) {
+            setAiAnalysis(analysisResult.data);
+        } else {
+            console.error("AI Analysis failed:", analysisResult.error);
+            setAiAnalysis({
+                report: "Could not generate AI analysis for this appointment.",
+                keyIndicators: { bloodSugar: "N/A", heartRate: "N/A" },
+                urgency: "routine",
+                explanation: "The AI model could not process the appointment details."
+            });
         }
+        setAnalysisLoading(false);
         setLoading(false);
     }
     
