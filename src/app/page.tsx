@@ -1,83 +1,13 @@
 
 'use client';
 
-import { useState } from 'react';
-import { useSignInWithEmailAndPassword, useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
 import { AppLogo } from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { TriangleAlert, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Stethoscope, User } from 'lucide-react';
+import Link from 'next/link';
 
-export default function AuthPage() {
-  const [tab, setTab] = useState('login');
-  const [role, setRole] = useState<'patient' | 'doctor' | ''>('');
-  
-  const [signInWithEmailAndPassword, , loadingLogin, errorLogin] = useSignInWithEmailAndPassword(auth);
-  const [createUserWithEmailAndPassword, , loadingRegister, errorRegister] = useCreateUserWithEmailAndPassword(auth);
-  
-  const router = useRouter();
-  const { toast } = useToast();
-
-  const handleAuth = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-
-    if (tab === 'login') {
-      const result = await signInWithEmailAndPassword(email, password);
-       if (result) {
-        // Fetch user role and redirect
-        const userDoc = await getDoc(doc(db, "users", result.user.uid));
-        if (userDoc.exists()) {
-            const userData = userDoc.data();
-            toast({ title: 'Login Successful', description: 'Welcome back!' });
-            if (userData.role === 'doctor') {
-                router.push('/doctor/dashboard');
-            } else {
-                router.push('/patient/dashboard');
-            }
-        } else {
-            // Fallback or error
-             toast({ variant: 'destructive', title: 'Login Failed', description: 'Could not find user profile.' });
-        }
-      }
-    } else { // Register
-      const name = formData.get('name') as string;
-      const age = formData.get('age') as string;
-      
-      if (!role) {
-          toast({ variant: 'destructive', title: 'Registration Failed', description: 'Please select a role (Patient or Doctor).' });
-          return;
-      }
-      
-      const newUser = await createUserWithEmailAndPassword(email, password);
-      if (newUser) {
-        await setDoc(doc(db, 'users', newUser.user.uid), {
-          uid: newUser.user.uid,
-          name,
-          email,
-          role,
-          age: parseInt(age),
-          createdAt: new Date(),
-        });
-        toast({ title: 'Registration Successful', description: 'Your account has been created.' });
-        router.push(role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard');
-      }
-    }
-  };
-
-  const currentError = tab === 'login' ? errorLogin : errorRegister;
-  const isLoading = loadingLogin || loadingRegister;
+export default function RoleSelectionPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-muted/40">
@@ -87,96 +17,30 @@ export default function AuthPage() {
             <h1 className="text-3xl font-bold">HealthVision</h1>
         </div>
 
-        <Tabs defaultValue="login" className="w-[400px]" onValueChange={setTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
-          </TabsList>
-            <TabsContent value="login">
-              <form onSubmit={handleAuth}>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Welcome Back</CardTitle>
-                    <CardDescription>Enter your credentials to access your account.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="login-email">Email</Label>
-                      <Input id="login-email" name="email" type="email" placeholder="m@example.com" required />
+        <Card className="w-[450px]">
+          <CardHeader className="text-center">
+            <CardTitle>Explore the Application</CardTitle>
+            <CardDescription>Choose a role to experience the dedicated dashboard and features.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4 p-6">
+              <Link href="/doctor/dashboard" className="w-full">
+                <div className="flex flex-col items-center justify-center space-y-3 p-6 rounded-lg bg-accent hover:bg-accent/80 transition-colors h-full border">
+                    <div className="p-3 bg-primary/10 rounded-full">
+                        <Stethoscope className="w-8 h-8 text-primary" />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="login-password">Password</Label>
-                      <Input id="login-password" name="password" type="password" required />
+                    <span className="text-center text-lg font-semibold">Doctor</span>
+                </div>
+              </Link>
+              <Link href="/patient/dashboard" className="w-full">
+                <div className="flex flex-col items-center justify-center space-y-3 p-6 rounded-lg bg-accent hover:bg-accent/80 transition-colors h-full border">
+                    <div className="p-3 bg-primary/10 rounded-full">
+                        <User className="w-8 h-8 text-primary" />
                     </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                      Sign In
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </form>
-            </TabsContent>
-            <TabsContent value="register">
-               <form onSubmit={handleAuth}>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Create an Account</CardTitle>
-                    <CardDescription>Fill in the details below to get started.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="register-name">Full Name</Label>
-                      <Input id="register-name" name="name" placeholder="John Doe" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="register-email">Email</Label>
-                      <Input id="register-email" name="email" type="email" placeholder="m@example.com" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="register-password">Password</Label>
-                      <Input id="register-password" name="password" type="password" required />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                          <Label htmlFor="register-age">Age</Label>
-                          <Input id="register-age" name="age" type="number" required />
-                      </div>
-                      <div className="space-y-2">
-                          <Label>I am a...</Label>
-                          <Select onValueChange={(value) => setRole(value as 'patient' | 'doctor')} required>
-                              <SelectTrigger>
-                                  <SelectValue placeholder="Select a role" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  <SelectItem value="patient">Patient</SelectItem>
-                                  <SelectItem value="doctor">Doctor</SelectItem>
-                              </SelectContent>
-                          </Select>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                      Create Account
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </form>
-            </TabsContent>
-             {currentError && (
-              <Alert variant="destructive" className="mt-4">
-                <TriangleAlert className="h-4 w-4" />
-                <AlertTitle>Authentication Failed</AlertTitle>
-                <AlertDescription>
-                  {currentError.message}
-                </AlertDescription>
-              </Alert>
-            )}
-        </Tabs>
-
+                    <span className="text-center text-lg font-semibold">Patient</span>
+                </div>
+              </Link>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

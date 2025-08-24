@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -13,19 +13,12 @@ import {
   MessageSquare,
   Siren,
   QrCode,
-  LogOut,
-  Stethoscope,
-  HeartPulse,
   FileText,
-  BrainCircuit,
+  Stethoscope,
   Pill,
-  Building,
   Video,
+  BrainCircuit,
 } from "lucide-react";
-
-import { useAuthState, useSignOut } from "react-firebase-hooks/auth";
-import { auth, db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -45,8 +38,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "./app-logo";
-import { Skeleton } from "./ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 type NavItem = {
@@ -83,49 +74,16 @@ const patientNavItems: NavItem[] = [
 
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [user, loading] = useAuthState(auth);
-  const [signOut] = useSignOut(auth);
-  const { toast } = useToast();
-
-  const [userRole, setUserRole] = React.useState<"patient" | "doctor" | null>(null);
-  const [userData, setUserData] = React.useState<{name: string, avatarHint: string} | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+
+  const userRole = pathname.startsWith('/doctor') ? 'doctor' : 'patient';
 
   React.useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/');
-    }
-    if (user) {
-        const fetchUserData = async () => {
-            const docRef = doc(db, "users", user.uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                setUserRole(data.role);
-                setUserData({ name: data.name, avatarHint: data.role === 'doctor' ? 'doctor professional' : 'happy man' });
-                
-                // Redirect if user is on the wrong dashboard
-                const currentArea = pathname.split('/')[1];
-                if (data.role !== currentArea) {
-                    router.replace(`/${data.role}/dashboard`);
-                }
-
-            } else {
-                // User exists in auth but not in firestore, something went wrong
-                console.error("No user profile found in Firestore!");
-                router.replace('/');
-            }
-        };
-        fetchUserData();
-    }
-  }, [user, loading, router, pathname]);
-
-  const handleLogout = async () => {
-    await signOut();
-    toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
-    router.push('/');
-  };
+    // Simulate initial load
+    const timer = setTimeout(() => setLoading(false), 250);
+    return () => clearTimeout(timer);
+  }, []);
 
   const navItems = userRole === "doctor" ? doctorNavItems : patientNavItems;
 
@@ -155,13 +113,18 @@ export function AppLayout({ children }: AppLayoutProps) {
     </nav>
   );
   
-   if (loading || !userRole) {
+   if (loading) {
     return (
        <div className="flex h-screen items-center justify-center">
          <Loader2 className="h-10 w-10 animate-spin text-primary" />
        </div>
     )
   }
+
+  const userData = userRole === 'doctor' ? 
+    { name: 'Dr. Smith', avatarHint: 'doctor professional' } : 
+    { name: 'John Patient', avatarHint: 'happy man' };
+
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -196,22 +159,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </Tooltip>
               </TooltipProvider>
             ))}
-        </nav>
-        <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={handleLogout}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span className="sr-only">Logout</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Logout</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </nav>
       </aside>
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
@@ -251,19 +198,19 @@ export function AppLayout({ children }: AppLayoutProps) {
                 className="overflow-hidden rounded-full"
               >
                 <Avatar>
-                  <AvatarImage src={`https://placehold.co/32x32.png`} data-ai-hint={userData?.avatarHint || 'user'} alt="User Avatar" />
-                  <AvatarFallback>{userData ? userData.name.split(" ").map(n => n[0]).join("") : 'U'}</AvatarFallback>
+                  <AvatarImage src={`https://placehold.co/32x32.png`} data-ai-hint={userData.avatarHint} alt="User Avatar" />
+                  <AvatarFallback>{userData.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{userData?.name || 'My Account'}</DropdownMenuLabel>
+              <DropdownMenuLabel>{userData.name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                Logout
+               <DropdownMenuItem asChild>
+                <Link href="/">Switch Role</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
