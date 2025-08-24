@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useSignInWithEmailAndPassword, useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { AppLogo } from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
@@ -36,8 +36,20 @@ export default function AuthPage() {
     if (tab === 'login') {
       const result = await signInWithEmailAndPassword(email, password);
        if (result) {
-        toast({ title: 'Login Successful', description: 'Welcome back!' });
-        router.push('/doctor/dashboard'); // Or logic to redirect based on role
+        // Fetch user role and redirect
+        const userDoc = await getDoc(doc(db, "users", result.user.uid));
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            toast({ title: 'Login Successful', description: 'Welcome back!' });
+            if (userData.role === 'doctor') {
+                router.push('/doctor/dashboard');
+            } else {
+                router.push('/patient/dashboard');
+            }
+        } else {
+            // Fallback or error
+             toast({ variant: 'destructive', title: 'Login Failed', description: 'Could not find user profile.' });
+        }
       }
     } else { // Register
       const name = formData.get('name') as string;
@@ -80,76 +92,79 @@ export default function AuthPage() {
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Register</TabsTrigger>
           </TabsList>
-          <form onSubmit={handleAuth}>
             <TabsContent value="login">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Welcome Back</CardTitle>
-                  <CardDescription>Enter your credentials to access your account.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input id="login-email" name="email" type="email" placeholder="m@example.com" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <Input id="login-password" name="password" type="password" required />
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                    Sign In
-                  </Button>
-                </CardFooter>
-              </Card>
+              <form onSubmit={handleAuth}>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Welcome Back</CardTitle>
+                    <CardDescription>Enter your credentials to access your account.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email">Email</Label>
+                      <Input id="login-email" name="email" type="email" placeholder="m@example.com" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Password</Label>
+                      <Input id="login-password" name="password" type="password" required />
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                      Sign In
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </form>
             </TabsContent>
             <TabsContent value="register">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Create an Account</CardTitle>
-                  <CardDescription>Fill in the details below to get started.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                   <div className="space-y-2">
-                    <Label htmlFor="register-name">Full Name</Label>
-                    <Input id="register-name" name="name" placeholder="John Doe" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="register-email">Email</Label>
-                    <Input id="register-email" name="email" type="email" placeholder="m@example.com" required />
-                  </div>
-                   <div className="space-y-2">
-                    <Label htmlFor="register-password">Password</Label>
-                    <Input id="register-password" name="password" type="password" required />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                        <Label htmlFor="register-age">Age</Label>
-                        <Input id="register-age" name="age" type="number" required />
+               <form onSubmit={handleAuth}>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create an Account</CardTitle>
+                    <CardDescription>Fill in the details below to get started.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="register-name">Full Name</Label>
+                      <Input id="register-name" name="name" placeholder="John Doe" required />
                     </div>
-                     <div className="space-y-2">
-                        <Label>I am a...</Label>
-                        <Select onValueChange={(value) => setRole(value as 'patient' | 'doctor')} required>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="patient">Patient</SelectItem>
-                                <SelectItem value="doctor">Doctor</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-email">Email</Label>
+                      <Input id="register-email" name="email" type="email" placeholder="m@example.com" required />
                     </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                    Create Account
-                  </Button>
-                </CardFooter>
-              </Card>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-password">Password</Label>
+                      <Input id="register-password" name="password" type="password" required />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                          <Label htmlFor="register-age">Age</Label>
+                          <Input id="register-age" name="age" type="number" required />
+                      </div>
+                      <div className="space-y-2">
+                          <Label>I am a...</Label>
+                          <Select onValueChange={(value) => setRole(value as 'patient' | 'doctor')} required>
+                              <SelectTrigger>
+                                  <SelectValue placeholder="Select a role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  <SelectItem value="patient">Patient</SelectItem>
+                                  <SelectItem value="doctor">Doctor</SelectItem>
+                              </SelectContent>
+                          </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                      Create Account
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </form>
             </TabsContent>
              {currentError && (
               <Alert variant="destructive" className="mt-4">
@@ -160,7 +175,6 @@ export default function AuthPage() {
                 </AlertDescription>
               </Alert>
             )}
-          </form>
         </Tabs>
 
       </div>
