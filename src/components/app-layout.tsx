@@ -99,7 +99,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             setUserData({
                 name: data.name || "User",
                 role: data.role || "patient",
-                avatarHint: data.role === "doctor" ? "doctor professional" : "happy man",
+                avatarHint: data.avatarHint || (data.role === "doctor" ? "doctor professional" : "happy man"),
             });
         }
       };
