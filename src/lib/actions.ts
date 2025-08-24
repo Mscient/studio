@@ -7,25 +7,16 @@ import { prescriptionSuggestion, PrescriptionSuggestionInput } from "@/ai/flows/
 import { medicalResearchUpdates } from "@/ai/flows/medical-research-updates";
 import { dailyHealthTrends } from "@/ai/flows/daily-trends";
 
-export async function getSymptomAnalysis(input: SymptomAnalysisInput) {
-  try {
-    const output = await symptomAnalysis(input);
-    return { success: true, data: output };
-  } catch (e) {
-    console.error(e);
-    const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred.";
-    return { success: false, error: `Symptom analysis failed: ${errorMessage}` };
-  }
-}
+// Note: In a real app, you would handle errors more gracefully.
+// These are simplified to return a success/error state.
 
 export async function getDetailedAnalysis(input: DetailedAnalysisInput) {
   try {
     const output = await detailedAnalysis(input);
     return { success: true, data: output };
-  } catch (e) {
-    console.error(e);
-    const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred.";
-    return { success: false, error: `Detailed analysis failed: ${errorMessage}` };
+  } catch (e: any) {
+    console.error("Detailed analysis failed:", e);
+    return { success: false, error: e.message || "An unexpected error occurred." };
   }
 }
 
@@ -33,10 +24,9 @@ export async function getPrescriptionSuggestion(input: PrescriptionSuggestionInp
   try {
     const output = await prescriptionSuggestion(input);
     return { success: true, data: output };
-  } catch (e) {
-    console.error(e);
-    const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred.";
-    return { success: false, error: `Prescription suggestion failed: ${errorMessage}` };
+  } catch (e: any) {
+    console.error("Prescription suggestion failed:", e);
+    return { success: false, error: e.message || "An unexpected error occurred." };
   }
 }
 
@@ -44,10 +34,9 @@ export async function getMedicalResearchUpdates() {
   try {
     const output = await medicalResearchUpdates();
     return { success: true, data: output };
-  } catch (e) {
-    console.error(e);
-    const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred.";
-    return { success: false, error: `Medical research updates failed: ${errorMessage}` };
+  } catch (e: any) {
+    console.error("Medical research updates failed:", e);
+    return { success: false, error: e.message || "An unexpected error occurred." };
   }
 }
 
@@ -55,9 +44,8 @@ export async function getDailyHealthTrends() {
   try {
     const output = await dailyHealthTrends();
     return { success: true, data: output };
-  } catch (e) {
-    console.error(e);
-    const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred.";
-    return { success: false, error: `Daily health trends failed: ${errorMessage}` };
+  } catch (e: any) {
+    console.error("Daily health trends failed:", e);
+    return { success: false, error: e.message || "An unexpected error occurred." };
   }
 }

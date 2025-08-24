@@ -5,20 +5,15 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Bot, Lightbulb, Loader2, Sparkles, TriangleAlert, Upload, FileText, HeartPulse, BrainCircuit, Activity, Pill, Stethoscope, Carrot, FileUp, Download } from "lucide-react";
+import { Lightbulb, Loader2, Sparkles, TriangleAlert, BrainCircuit, Activity, Pill, Stethoscope, Carrot, Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import type { DetailedAnalysisOutput } from "@/ai/flows/detailed-analysis";
 import { getDetailedAnalysis } from "@/lib/actions";
-import { Input } from "./ui/input";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { HeartPulse, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
@@ -53,11 +48,15 @@ const UrgencyMap = {
   },
 };
 
+const sampleProfileData = {
+    conditions: ['Hypertension', 'Type 2 Diabetes'],
+    allergies: ['Pollen'],
+};
+
 export default function SymptomChecker() {
   const [analysis, setAnalysis] = useState<DetailedAnalysisOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [user] = useAuthState(auth);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -73,33 +72,19 @@ export default function SymptomChecker() {
   });
 
   const handleLoadData = async () => {
-    if (!user) {
-      toast({ variant: 'destructive', title: "Not Logged In", description: "You must be logged in to load your data." });
-      return;
-    }
+    const conditions = (sampleProfileData.conditions || []).join(', ');
+    const allergies = (sampleProfileData.allergies || []).join(', ');
     
-    const docRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(docRef);
+    let historyText = "";
+    if (conditions) historyText += `Existing Conditions: ${conditions}. `;
+    if (allergies) historyText += `Allergies: ${allergies}.`;
 
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      const conditions = (data.conditions || []).join(', ');
-      const allergies = (data.allergies || []).join(', ');
-      
-      let historyText = "";
-      if (conditions) historyText += `Existing Conditions: ${conditions}. `;
-      if (allergies) historyText += `Allergies: ${allergies}.`;
+    form.setValue("treatmentHistory", historyText.trim());
 
-      form.setValue("treatmentHistory", historyText.trim());
-
-      toast({
+    toast({
         title: "Data Loaded",
         description: "Your existing conditions and allergies have been loaded into the form.",
-      });
-
-    } else {
-        toast({ variant: 'destructive', title: "No Profile Found", description: "Could not find your patient profile." });
-    }
+    });
   }
 
 
@@ -318,5 +303,3 @@ export default function SymptomChecker() {
     </div>
   );
 }
-
-    

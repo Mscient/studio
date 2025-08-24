@@ -2,15 +2,12 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
 import { AppLayout } from "@/components/app-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Briefcase, User, Loader2 } from "lucide-react";
+import { Briefcase, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface PatientData {
@@ -25,48 +22,38 @@ interface PatientData {
     avatarHint: string;
 }
 
+const samplePatient: PatientData = {
+    name: 'John Doe',
+    age: 45,
+    email: 'john.doe@example.com',
+    phone: '123-456-7890',
+    gender: 'Male',
+    bloodType: 'O+',
+    allergies: ['Peanuts'],
+    conditions: ['Hypertension'],
+    avatarHint: 'happy man',
+};
+
+
 export default function PatientProfilePage({ params }: { params: { userId: string } }) {
   const [patient, setPatient] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [user, authLoading] = useAuthState(auth);
 
   useEffect(() => {
     const fetchPatientData = async (uid: string) => {
         setLoading(true);
-        const docRef = doc(db, 'users', uid);
-        const docSnap = await getDoc(docRef);
-
-        if(docSnap.exists()) {
-            const data = docSnap.data();
-            setPatient({
-                name: data.name || "N/A",
-                age: data.age || "N/A",
-                email: data.email || "N/A",
-                phone: data.phone || "N/A",
-                gender: data.gender || "N/A",
-                bloodType: data.bloodType || "N/A",
-                allergies: data.allergies || [],
-                conditions: data.conditions || [],
-                avatarHint: "happy man",
-            });
-        } else {
-            console.log("No such document!");
-        }
-        setLoading(false);
+        // Simulate fetching data
+        setTimeout(() => {
+            setPatient(samplePatient);
+            setLoading(false);
+        }, 500);
     };
     
-    // This allows doctors to view patient profiles, or patients to view their own
-    const profileIdToLoad = params.userId;
+    fetchPatientData(params.userId);
 
-    if (profileIdToLoad) {
-        fetchPatientData(profileIdToLoad);
-    } else if (!authLoading) {
-      setLoading(false); // Finished auth check, no user, stop loading
-    }
+  }, [params.userId]);
 
-  }, [params.userId, user, authLoading]);
-
-  if (loading || authLoading) {
+  if (loading) {
     return (
         <AppLayout>
             <div className="w-full max-w-4xl mx-auto">
@@ -116,7 +103,7 @@ export default function PatientProfilePage({ params }: { params: { userId: strin
       return (
         <AppLayout>
             <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
-                <p>Patient profile not found or you do not have permission to view it.</p>
+                <p>Patient profile not found.</p>
             </div>
         </AppLayout>
       )

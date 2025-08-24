@@ -2,9 +2,6 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
 import { AppLayout } from "@/components/app-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -45,10 +42,21 @@ interface PatientData {
     avatarHint?: string;
 }
 
+const samplePatient: PatientData = {
+    name: 'John Patient',
+    email: 'john.patient@example.com',
+    age: 42,
+    phone: '123-456-7890',
+    gender: 'Male',
+    bloodType: 'A+',
+    allergies: ['Pollen'],
+    conditions: ['Hypertension', 'Type 2 Diabetes'],
+    avatarHint: 'happy man'
+};
+
 export default function PatientProfilePage() {
   const [patient, setPatient] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [user, authLoading] = useAuthState(auth);
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -66,107 +74,45 @@ export default function PatientProfilePage() {
   });
 
   useEffect(() => {
-    const fetchPatientData = async (uid: string) => {
-        if (!uid) {
-            setLoading(false);
-            return;
-        };
+    const fetchPatientData = () => {
         setLoading(true);
-        try {
-            const docRef = doc(db, 'users', uid);
-            const docSnap = await getDoc(docRef);
-
-            if(docSnap.exists()) {
-                const data = docSnap.data();
-                const patientData = {
-                    name: data.name || "N/A",
-                    email: data.email || "N/A",
-                    age: data.age,
-                    phone: data.phone,
-                    gender: data.gender,
-                    bloodType: data.bloodType,
-                    allergies: data.allergies || [],
-                    conditions: data.conditions || [],
-                    avatarHint: "happy man",
-                };
-                setPatient(patientData);
-                form.reset({
-                  name: patientData.name,
-                  age: patientData.age,
-                  phone: patientData.phone,
-                  gender: patientData.gender,
-                  bloodType: patientData.bloodType,
-                  allergies: patientData.allergies?.join(', '),
-                  conditions: patientData.conditions?.join(', '),
-                });
-            } else {
-                console.log("No such document!");
-                setPatient(null);
-            }
-        } catch (error) {
-            console.error("Error fetching patient data: ", error);
-            setPatient(null);
-        } finally {
+        setTimeout(() => {
+            setPatient(samplePatient);
+            form.reset({
+                name: samplePatient.name,
+                age: samplePatient.age,
+                phone: samplePatient.phone,
+                gender: samplePatient.gender,
+                bloodType: samplePatient.bloodType,
+                allergies: samplePatient.allergies?.join(', '),
+                conditions: samplePatient.conditions?.join(', '),
+            });
             setLoading(false);
-        }
+        }, 500);
     };
-    
-    if (!authLoading) {
-      if (user) {
-        fetchPatientData(user.uid);
-      } else {
-        setLoading(false);
-      }
-    }
-  }, [user, authLoading, form]);
+    fetchPatientData();
+  }, [form]);
 
   const handleUpdateProfile = async (data: ProfileFormValues) => {
-    if (!user) return;
-
-    const profileData = {
-      ...data,
-      allergies: data.allergies?.split(',').map(s => s.trim()).filter(Boolean) || [],
-      conditions: data.conditions?.split(',').map(s => s.trim()).filter(Boolean) || [],
-    };
-
-    try {
-      await setDoc(doc(db, 'users', user.uid), profileData, { merge: true });
-      toast({
+    const updatedPatientData = {
+        ...patient,
+        ...data,
+        allergies: data.allergies?.split(',').map(s => s.trim()).filter(Boolean) || [],
+        conditions: data.conditions?.split(',').map(s => s.trim()).filter(Boolean) || [],
+    } as PatientData;
+    
+    setPatient(updatedPatientData);
+    
+    toast({
         title: "Profile Updated",
         description: "Your information has been saved successfully.",
-      });
-      if (user) {
-        // Re-fetch data after update
-        const docRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(docRef);
-        if(docSnap.exists()) {
-            const updatedData = docSnap.data();
-            setPatient({
-                name: updatedData.name || "N/A",
-                email: updatedData.email || "N/A",
-                age: updatedData.age,
-                phone: updatedData.phone,
-                gender: updatedData.gender,
-                bloodType: updatedData.bloodType,
-                allergies: updatedData.allergies || [],
-                conditions: updatedData.conditions || [],
-                avatarHint: "happy man",
-            });
-        }
-      }
-      setIsDialogOpen(false);
-    } catch (error) {
-      console.error("Error updating profile: ", error);
-      toast({
-        variant: "destructive",
-        title: "Update Failed",
-        description: "There was an error saving your profile.",
-      });
-    }
+    });
+
+    setIsDialogOpen(false);
   };
 
 
-  if (loading || authLoading) {
+  if (loading) {
     return (
         <AppLayout>
             <div className="w-full max-w-4xl mx-auto">
@@ -217,7 +163,6 @@ export default function PatientProfilePage() {
         <AppLayout>
           <div className="text-center py-10">
             <p>Patient profile not found.</p>
-            <p className="text-sm text-muted-foreground">Please complete your profile information.</p>
           </div>
         </AppLayout>
       )

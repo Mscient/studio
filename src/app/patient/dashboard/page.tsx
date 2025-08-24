@@ -7,50 +7,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowUpRight, Calendar, FileText, HeartPulse, Stethoscope, Video, QrCode, BrainCircuit, Pill, Building, Loader2 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import QRCode from "qrcode.react";
 
 
 export default function PatientDashboard() {
-  const [user, authLoading] = useAuthState(auth);
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState('John Patient');
   const [greeting, setGreeting] = useState('Welcome back!');
   const [profileUrl, setProfileUrl] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const generateProfileUrl = () => {
-    if (user) {
+      // In a real app, this would use the user's actual ID.
       const timestamp = new Date().getTime();
-      const url = `${window.location.origin}/patient/profile/${user.uid}?ts=${timestamp}`;
+      const url = `${window.location.origin}/patient/profile/sample-patient-id?ts=${timestamp}`;
       setProfileUrl(url);
-    }
   }
+  
+   useEffect(() => {
+    setGreeting(`Welcome back, ${userName.split(' ')[0]}!`);
+  }, [userName]);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-        if (user) {
-            setLoading(true);
-            const docRef = doc(db, "users", user.uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const userData = docSnap.data();
-                setUserName(userData.name);
-                setGreeting(`Welcome back, ${userData.name.split(' ')[0]}!`);
-            }
-             setLoading(false);
-        }
-    };
-    if (!authLoading) {
-      fetchUserData();
-    }
-  }, [user, authLoading]);
 
-  if(loading || authLoading) {
+  if(loading) {
     return (
         <AppLayout>
             <div className="flex justify-center items-center h-[calc(100vh-10rem)]">

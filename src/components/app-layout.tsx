@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -18,7 +18,8 @@ import {
   Pill,
   Video,
   BrainCircuit,
-  LogOut
+  LogOut,
+  User,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -39,12 +40,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "./app-logo";
-import { Loader2 } from "lucide-react";
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { signOut } from "firebase/auth";
-import { useRouter } from "next/navigation";
 
 type NavItem = {
   href: string;
@@ -78,42 +73,33 @@ const patientNavItems: NavItem[] = [
     { href: "/patient/detailed-analysis", icon: BrainCircuit, label: "AI Analysis" },
 ];
 
+const getUserData = (role: 'patient' | 'doctor') => {
+    if (role === 'doctor') {
+        return {
+            name: "Dr. Evelyn Reed",
+            role: "doctor",
+            avatarHint: "doctor professional"
+        }
+    }
+    return {
+        name: "John Patient",
+        role: "patient",
+        avatarHint: "happy man"
+    }
+}
+
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  const [user, authLoading] = useAuthState(auth);
-  const [userData, setUserData] = React.useState<{name: string, role: string, avatarHint: string} | null>(null);
-
-  React.useEffect(() => {
-    if (!authLoading && !user) {
-        router.push('/');
-    }
-
-    if (user && !userData) {
-      const fetchUserData = async () => {
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            setUserData({
-                name: data.name || "User",
-                role: data.role || "patient",
-                avatarHint: data.avatarHint || (data.role === "doctor" ? "doctor professional" : "happy man"),
-            });
-        }
-      };
-      fetchUserData();
-    }
-  }, [user, authLoading, router, userData]);
+  
+  const userRole = pathname.startsWith('/doctor') ? 'doctor' : 'patient';
+  const userData = getUserData(userRole);
+  const navItems = userRole === "doctor" ? doctorNavItems : patientNavItems;
 
   const handleLogout = async () => {
-    await signOut(auth);
     router.push('/');
   }
-
-  const userRole = userData?.role;
-  const navItems = userRole === "doctor" ? doctorNavItems : patientNavItems;
 
   const NavContent = ({ isMobile = false }) => (
     <nav className={`flex flex-col items-start gap-2 px-2 ${isMobile ? 'sm:py-5 w-full' : 'py-4'}`}>
@@ -140,14 +126,6 @@ export function AppLayout({ children }: AppLayoutProps) {
       </TooltipProvider>
     </nav>
   );
-  
-   if (authLoading || !user || !userData) {
-    return (
-       <div className="flex h-screen items-center justify-center">
-         <Loader2 className="h-10 w-10 animate-spin text-primary" />
-       </div>
-    )
-  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -229,6 +207,11 @@ export function AppLayout({ children }: AppLayoutProps) {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{userData.name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                 <Link href={userRole === 'patient' ? '/patient/profile' : '#'}>
+                    <User className="mr-2" /> Profile
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
